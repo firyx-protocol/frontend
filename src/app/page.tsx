@@ -1,10 +1,26 @@
+"use client";
+
 import Image from "next/image";
 import styles from "./page.module.css";
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
 
 export default function Home() {
+  const {connect, connected, account, wallets} = useWallet();
+
+
   return (
     <div className={styles.page}>
       <main className={styles.main}>
+        {wallets.map((wallet) => (
+          <button
+            disabled={connected}
+            key={wallet.name}
+            onClick={() => connect(wallet.name)}
+          >
+            Connect to {wallet.name}
+          </button>
+        ))}
+        {connected && <span>Connected to {account?.address.toString()}</span>}
         <Image
           className={styles.logo}
           src="/next.svg"
