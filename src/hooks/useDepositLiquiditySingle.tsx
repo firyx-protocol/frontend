@@ -1,0 +1,86 @@
+import { CONTRACT_ADDRESS } from "@/config";
+import { UseHookPayload, UseMutationHook } from "@/types";
+import { aptos } from "@/utils/aptos";
+import { normalizeDepositLiquiditySingle } from "@/utils/normalizers";
+import {
+  InputTransactionData,
+  useWallet,
+} from "@aptos-labs/wallet-adapter-react";
+import {
+  useMutation,
+  UseMutationOptions,
+  UseMutationResult,
+} from "@tanstack/react-query";
+
+type DepositLiquiditySinglePayload = {
+  positionAddress: string;
+  fromA: string;
+  toB: string;
+  amountIn: number;
+  slippageNumerators: string;
+  slippageDenominator: string;
+  thresholdNumerator: string;
+  thresholdDenominator: string;
+};
+
+export type DepositLiquiditySingleResult = {
+  positionAddress: string;
+  lenderAddress: string;
+  depositSlotAddress: string;
+  liquidityAmount: string;
+  shares: string;
+  totalLiquidity: string;
+  totalShares: string;
+  utilization: string;
+  transactionHash: string;
+  timestamp: string;
+  gasUsed: string;
+  success: boolean;
+};
+
+type UseDepositLiquiditySingleOptions = UseMutationOptions<
+  DepositLiquiditySingleResult,
+  Error,
+  DepositLiquiditySinglePayload
+>;
+
+type UseDepositLiquiditySingleResult = UseMutationResult<
+  DepositLiquiditySingleResult,
+  Error,
+  DepositLiquiditySinglePayload
+>;
+
+export const useDepositLiquiditySingle: UseMutationHook<
+  UseDepositLiquiditySingleOptions,
+  UseDepositLiquiditySingleResult
+> = (options) => {
+  const { signAndSubmitTransaction } = useWallet();
+
+  const mutationFn = async (
+    payload: DepositLiquiditySinglePayload
+  ): Promise<DepositLiquiditySingleResult> => {
+    const transaction: InputTransactionData = {
+      data: {
+        function: `${CONTRACT_ADDRESS}::loan_position::deposit_liquidity_single`,
+        functionArguments: Object.values(payload),
+      },
+    };
+    const response = await signAndSubmitTransaction(transaction);
+    const executedTxn = await aptos.waitForTransaction({
+      transactionHash: response.hash,
+    });
+    console.log("Raw transaction response:", response);
+
+    const normalizedResponse = normalizeDepositLiquiditySingle(executedTxn);
+    if (!normalizedResponse) {
+      throw new Error("Failed to normalize deposit liquidity single response");
+    }
+    return normalizedResponse;
+  };
+
+  return useMutation<DepositLiquiditySingleResult, Error, DepositLiquiditySinglePayload>({
+    mutationKey: ["depositLiquiditySingle"],
+    mutationFn,
+    ...options,
+  });
+};
