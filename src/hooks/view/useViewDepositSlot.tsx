@@ -18,7 +18,7 @@ interface UseViewDepositSlot {
   lenderAddress: (depositSlotAddress: string) => Promise<string>;
   loanPositionAddress: (depositSlotAddress: string) => Promise<string>;
   timestampCreated: (depositSlotAddress: string) => Promise<string>;
-  totalDeposits: (depositSlotAddress: string) => Promise<string>;
+  totalDeposits: () => Promise<string>;
 }
 
 export const useViewDepositSlot = (): UseViewDepositSlot => {
@@ -204,14 +204,10 @@ export const useViewDepositSlot = (): UseViewDepositSlot => {
     return String(timestampCreated);
   };
 
-  const totalDeposits = async (depositSlotAddress: string): Promise<string> => {
-    if (!depositSlotAddress) {
-      throw new Error("Deposit slot address is required");
-    }
+  const totalDeposits = async (): Promise<string> => {
     const [totalDeposits] = await aptos.view({
       payload: {
         function: `${CONTRACT_ADDRESS}::deposit_slot::total_deposits`,
-        functionArguments: [depositSlotAddress],
       },
     });
     return String(totalDeposits);
