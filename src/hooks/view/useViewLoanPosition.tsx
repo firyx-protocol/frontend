@@ -2,11 +2,32 @@ import { CONTRACT_ADDRESS } from "@/config";
 import { aptos } from "@/utils/aptos";
 
 interface UseViewLoanPosition {
+  /**
+   * Get the global fee growth for a specific loan position address.
+   * @param loanPositionAddress - The address of the loan position.
+   * @returns The global fee growth.
+   */
   getFeeGrowthGlobal: (loanPositionAddress: string) => Promise<any>;
+
+  /**
+   * Get the position information for a specific loan position address.
+   * @param loanPositionAddress - The address of the loan position.
+   * @returns The position information.
+   */
   getPositionInfo: (loanPositionAddress: string) => Promise<any>;
+
+  /**
+   * Get the lending position information for a specific loan position address.
+   * @param loanPositionAddress - The address of the loan position.
+   * @returns The lending position information.
+   */
   lendingPosition: (loanPositionAddress: string) => Promise<any>;
 }
 
+/**
+ * Custom hook to view loan position details.
+ * @returns A set of functions to view loan position details.
+ */
 export const useViewLoanPosition = (): UseViewLoanPosition => {
   const getFeeGrowthGlobal = async (
     loanPositionAddress: string

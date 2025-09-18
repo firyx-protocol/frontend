@@ -49,6 +49,11 @@ type UseDepositLiquidityResult = UseMutationResult<
   DepositLiquidityPayload
 >;
 
+/**
+ * Custom hook to deposit liquidity into a loan position.
+ * @param options - Optional mutation options.
+ * @returns Mutation result containing the status and data of the operation.
+ */
 export const useDepositLiquidity: UseMutationHook<
   UseDepositLiquidityOptions,
   UseDepositLiquidityResult

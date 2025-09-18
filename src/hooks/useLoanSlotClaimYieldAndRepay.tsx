@@ -59,6 +59,11 @@ type UseLoanSlotClaimYieldAndRepayResult = UseMutationResult<
   LoanSlotClaimYieldAndRepayPayload
 >;
 
+/**
+ * Custom hook to claim yield and repay a loan slot in a loan position.
+ * @param options - Optional mutation options.
+ * @returns Mutation result containing the status and data of the operation.
+ */
 export const useLoanSlotClaimYieldAndRepay: UseMutationHook<
   UseLoanSlotClaimYieldAndRepayOptions,
   UseLoanSlotClaimYieldAndRepayResult

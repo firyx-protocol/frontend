@@ -70,6 +70,11 @@ type UseCreateLoanPositionResult = UseMutationResult<
   CreateLoanPositionPayload
 >;
 
+/**
+ * Custom hook to create a new loan position.
+ * @param options - Optional mutation options.
+ * @returns Mutation result containing the status and data of the operation.
+ */
 export const useCreateLoanPosition: UseMutationHook<
   UseCreateLoanPositionOptions,
   UseCreateLoanPositionResult
