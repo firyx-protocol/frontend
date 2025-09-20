@@ -1,6 +1,6 @@
 import { CONTRACT_ADDRESS } from "@/config";
 import { UseHookPayload, UseMutationHook, UseQueryHook } from "@/types";
-import { normalizeLoanPositionCreation } from "@/utils/normalizers";
+import { normalizeLoanPositionCreation } from "@/libs/normalizers";
 import {
   InputTransactionData,
   useWallet,

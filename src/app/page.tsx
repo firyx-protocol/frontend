@@ -3,9 +3,11 @@
 import Image from "next/image";
 import styles from "./page.module.css";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import Glass from "@/components/utils/glass/glass";
+import { Box, Button, Text } from "@chakra-ui/react";
 
 export default function Home() {
-  const {connect, connected, account, wallets} = useWallet();
+  const { connect, connected, account, wallets } = useWallet();
 
 
   return (
@@ -21,6 +23,17 @@ export default function Home() {
           </button>
         ))}
         {connected && <span>Connected to {account?.address.toString()}</span>}
+        <Box
+          minH="100vh"
+          p={8}
+        >
+          {/* Glass effect test */}
+          <Box position="relative" top="50%" left="50%" transform="translate(-50%, -50%)">
+            <Glass>
+              Glass Effect Test
+            </Glass>
+          </Box>
+        </Box>
         <Image
           className={styles.logo}
           src="/next.svg"
