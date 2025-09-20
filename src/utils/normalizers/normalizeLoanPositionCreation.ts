@@ -1,17 +1,20 @@
 import { CreateLoanPositionResult } from "@/hooks/useCreateLoanPosition";
 import { extractTokenInfo } from "./extractTokenInfo";
+import { CommittedTransactionResponse } from "@aptos-labs/ts-sdk";
+import { TransactionTypeResolver } from "./transactionTypeResolver";
 
 /**
  * Normalizes the response from the loan position creation transaction.
  * @param transaction - The transaction data to normalize.
  * @returns The normalized data or null if normalization fails.
  */
-export const normalizeLoanPositionCreation = (transaction: any): CreateLoanPositionResult | null => {
+export const normalizeLoanPositionCreation = (
+  transaction: CommittedTransactionResponse
+): CreateLoanPositionResult | null => {
   try {
-    if (!transaction.events) {
-      console.error("No events found in transaction");
-      return null;
-    }
+    if (!transaction) return null;
+
+    transaction = TransactionTypeResolver.toUserTransaction(transaction);
 
     // Find LoanPositionCreated event
     const loanPositionEvent = transaction.events.find((event: any) =>
