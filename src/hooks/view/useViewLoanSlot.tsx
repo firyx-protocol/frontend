@@ -1,5 +1,7 @@
 import { CONTRACT_ADDRESS } from "@/config";
 import { aptos } from "@/utils/aptos";
+import { snakeToCamel } from "@/utils/convert";
+import { MoveResource } from "@aptos-labs/ts-sdk";
 
 interface UseViewLoanSlot {
   principal: (loanSlotAddress: string) => Promise<string>;
@@ -15,6 +17,7 @@ interface UseViewLoanSlot {
     curDebtIndex: string
   ) => Promise<string>;
   getLoanSlotInfo: (loanSlotAddress: string) => Promise<LoanSlotInfo>;
+  getView: (loanSlotAddress: string) => Promise<MoveResource[]>;
 }
 
 interface LoanSlotInfo {
@@ -176,6 +179,17 @@ export const useViewLoanSlot = (): UseViewLoanSlot => {
     return mappedLoanSlotInfo(loanSlotInfo);
   };
 
+  const getView = async (loanSlotAddress: string): Promise<MoveResource[]> => {
+    if (!loanSlotAddress) {
+      throw new Error("Loan slot address is required");
+    }
+    const resources = await aptos.getAccountResources({
+      accountAddress: CONTRACT_ADDRESS,
+    });
+    const convertedResources = snakeToCamel(resources) as MoveResource[];
+    return convertedResources;
+  }
+
   return {
     principal,
     reserve,
@@ -187,6 +201,7 @@ export const useViewLoanSlot = (): UseViewLoanSlot => {
     isActive,
     currentDebt,
     getLoanSlotInfo,
+    getView,
   };
 };
 

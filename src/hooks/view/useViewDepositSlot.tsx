@@ -1,8 +1,7 @@
 import { CONTRACT_ADDRESS } from "@/config";
-import { UseQueryHook } from "@/types";
-import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
-import { useQuery } from "@tanstack/react-query";
+import { MoveResource, MoveValue } from "@aptos-labs/ts-sdk";
 import { aptos } from "@/utils/aptos";
+import { snakeToCamel } from "@/utils/convert";
 
 interface UseViewDepositSlot {
   originalPrincipal: (depositSlotAddress: string) => Promise<string>;
@@ -11,7 +10,7 @@ interface UseViewDepositSlot {
   activeDeposits: () => Promise<number>;
   feeGrowthDebtA: (depositSlotAddress: string) => Promise<string>;
   feeGrowthDebtB: (depositSlotAddress: string) => Promise<string>;
-  getDepositSlotInfo: (depositSlotAddress: string) => Promise<any>;
+  getDepositSlotInfo: (depositSlotAddress: string) => Promise<MoveValue[]>;
   isActive: (depositSlotAddress: string) => Promise<boolean>;
   lastDepositTimestamp: (depositSlotAddress: string) => Promise<string>;
   lastWithdrawTimestamp: (depositSlotAddress: string) => Promise<string>;
@@ -19,6 +18,7 @@ interface UseViewDepositSlot {
   loanPositionAddress: (depositSlotAddress: string) => Promise<string>;
   timestampCreated: (depositSlotAddress: string) => Promise<string>;
   totalDeposits: () => Promise<string>;
+  getView: (depositSlotAddress: string) => Promise<MoveResource[]>;
 }
 
 export const useViewDepositSlot = (): UseViewDepositSlot => {
@@ -104,7 +104,7 @@ export const useViewDepositSlot = (): UseViewDepositSlot => {
     return String(feeGrowthDebtB);
   };
 
-  const getDepositSlotInfo = async (depositSlotAddress: string) => {
+  const getDepositSlotInfo = async (depositSlotAddress: string): Promise<MoveValue[]> => {
     if (!depositSlotAddress) {
       throw new Error("Deposit slot address is required");
     }
@@ -213,6 +213,17 @@ export const useViewDepositSlot = (): UseViewDepositSlot => {
     return String(totalDeposits);
   };
 
+  const getView = async (depositSlotAddress: string): Promise<MoveResource[]> => {
+    if (!depositSlotAddress) {
+      throw new Error("Deposit slot address is required");
+    }
+    const resources = await aptos.getAccountResources({
+      accountAddress: depositSlotAddress,
+    });
+    const convertedResources = snakeToCamel(resources) as MoveResource[];
+    return convertedResources;
+  };
+
   return {
     originalPrincipal,
     share,
@@ -228,5 +239,6 @@ export const useViewDepositSlot = (): UseViewDepositSlot => {
     loanPositionAddress,
     timestampCreated,
     totalDeposits,
+    getView,
   };
 };
