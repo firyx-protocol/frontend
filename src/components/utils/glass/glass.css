@@ -1,19 +1,19 @@
 .GlassContainer {
-    --corner-radius: 24px !important;
-    --base-strength: 23px !important;
-    --extra-blur: 0px !important;
-    --softness: 32px !important;
-    --tint-amount: 0 !important;
-    --tint-saturation: 3.91 !important;
-    --tint-hue: 360deg !important;
-    --contrast: 1 !important;
-    --brightness: 0.89 !important;
-    --invert: 4% !important;
+    --glass-corner-radius: 24px !important;
+    --glass-base-strength: 8px !important;
+    --glass-extra-blur: 0px !important;
+    --glass-softness: 32px !important;
+    --glass-tint-amount: 0 !important;
+    --glass-tint-saturation: 3.91 !important;
+    --glass-tint-hue: 360deg !important;
+    --glass-contrast: 1 !important;
+    --glass-brightness: 0.89 !important;
+    --glass-invert: 4% !important;
 
-    --total-strength: calc(var(--base-strength) + var(--extra-blur)) !important;
-    --edge-width: calc(0.3px + (var(--softness) * 0.1)) !important;
-    --emboss-width: calc((var(--softness) * 0.38)) !important;
-    --refraction-width: calc((var(--softness) * 0.3)) !important;
+    --glass-total-strength: calc(var(--glass-base-strength) + var(--glass-extra-blur)) !important;
+    --glass-edge-width: calc(0.3px + (var(--glass-softness) * 0.1)) !important;
+    --glass-emboss-width: calc((var(--glass-softness) * 0.38)) !important;
+    --glass-refraction-width: calc((var(--glass-softness) * 0.3)) !important;
 
     position: relative !important;
     overflow: visible !important;
@@ -25,7 +25,7 @@
     display: block;
     z-index: 100;
     overflow: hidden;
-    border-radius: var(--corner-radius);
+    border-radius: var(--glass-corner-radius);
     pointer-events: auto;
 }
 .GlassMaterial {
@@ -42,32 +42,32 @@
     inset: 0;
     z-index: 3;
     overflow: hidden;
-    border-radius: var(--corner-radius);
+    border-radius: var(--glass-corner-radius);
     background-color: rgba(241, 230, 230, 0);
 }
 .GlassMaterial > div {
     position: absolute;
     inset: 0;
     box-sizing: border-box;
-    border-radius: var(--corner-radius);
+    border-radius: var(--glass-corner-radius);
     z-index: 2;
     overflow: hidden;
 }
 .GlassMaterial .GlassEdgeReflection {
     z-index: 4;
-    margin: calc(var(--total-strength) * -1);
-    border-radius: calc(var(--corner-radius) + var(--total-strength));
-    backdrop-filter: blur(var(--total-strength)) brightness(1.2) saturate(1.2);
-    padding: var(--edge-width);
-    border: var(--total-strength) solid transparent;
+    margin: calc(var(--glass-total-strength) * -1);
+    border-radius: calc(var(--glass-corner-radius) + var(--glass-total-strength));
+    backdrop-filter: blur(var(--glass-total-strength)) brightness(1.2) saturate(1.2);
+    padding: var(--glass-edge-width);
+    border: var(--glass-total-strength) solid transparent;
     mask: 
         linear-gradient(white 0 0) padding-box,
         linear-gradient(white 0 0) content-box;
     mask-composite: exclude, exclude;
 }
 .GlassMaterial .GlassEmbossReflection {
-    backdrop-filter: blur(calc(var(--total-strength) * 1.5)) invert(0.25) brightness(1.11) saturate(1.2) hue-rotate(-10deg) contrast(2.3);
-    padding: var(--emboss-width);
+    backdrop-filter: blur(calc(var(--glass-total-strength) * 1.5)) invert(0.2) brightness(1.2) saturate(1.2) hue-rotate(1deg) contrast(1.2);
+    padding: var(--glass-emboss-width);
     border: 0 solid transparent;
     mask: 
         linear-gradient(white 0 0) padding-box,
@@ -76,25 +76,25 @@
 }
 .GlassMaterial .GlassRefraction {
     backdrop-filter: invert(0.1) brightness(1.2) contrast(1.5);
-    padding: var(--refraction-width);
-    border: calc(var(--emboss-width)) solid transparent;
+    padding: var(--glass-refraction-width);
+    border: calc(var(--glass-emboss-width)) solid transparent;
     mask: 
         linear-gradient(white 0 0) padding-box,
         linear-gradient(white 0 0) content-box;
     mask-composite: exclude, exclude;
 }
 .GlassMaterial .GlassBlur {
-    backdrop-filter: blur(var(--extra-blur)) brightness(1.25);
-    border-radius: calc(var(--corner-radius) - (var(--emboss-width) + var(--refraction-width)));
-    margin: calc(var(--emboss-width) + var(--refraction-width));
+    backdrop-filter: blur(var(--glass-extra-blur)) brightness(1.25);
+    border-radius: calc(var(--glass-corner-radius) - (var(--glass-emboss-width) + var(--glass-refraction-width)));
+    margin: calc(var(--glass-emboss-width) + var(--glass-refraction-width));
 }
 .GlassMaterial .BlendLayers {
     z-index: 3;
-    backdrop-filter: blur(calc((var(--softness) * 0.2) + (var(--extra-blur) * 0.2)));
+    backdrop-filter: blur(calc((var(--glass-softness) * 0.2) + (var(--glass-extra-blur) * 0.2)));
 }
 .GlassMaterial .BlendEdge {
     z-index: 8;
-    backdrop-filter: blur(calc(var(--edge-width) * 0.4)) contrast(1.6) saturate(1.5);
+    backdrop-filter: blur(calc(var(--glass-edge-width) * 0.4)) contrast(1.2) saturate(1);
 }
 .GlassContainer:before {
     content: '';
@@ -102,8 +102,8 @@
     inset: 0;
     z-index: 20;
     display: block;
-    border-radius: var(--corner-radius);
-    backdrop-filter: invert(var(--invert));
+    border-radius: var(--glass-corner-radius);
+    backdrop-filter: invert(var(--glass-invert));
 }
 .GlassMaterial:before {
     content: '';
@@ -111,7 +111,7 @@
     inset: 0;
     z-index: 11;
     display: block;
-    border-radius: var(--corner-radius);
+    border-radius: var(--glass-corner-radius);
     padding: 1px;
     border: 0 solid transparent;
     background: linear-gradient(155deg, hsla(0, 0%, 100%, 0.15) 0%, hsla(0, 0%, 0%, 0.2) 50%, hsla(0, 0%, 100%, 0.15) 100%);
@@ -124,10 +124,10 @@
 .GlassMaterial .Highlight {
     z-index: 12;
     display: block;
-    border-radius: var(--corner-radius);
+    border-radius: var(--glass-corner-radius);
     padding: 1px;
     border: 0 solid transparent;
-    backdrop-filter: brightness(1.2) contrast(1.6) saturate(1.2) opacity(1);
+    backdrop-filter: brightness(1.2) contrast(1.1) saturate(1) opacity(1);
     mask: 
         linear-gradient(white 0 0) padding-box,
         linear-gradient(white 0 0) content-box;
@@ -135,5 +135,5 @@
 }
 .GlassMaterial .Brightness {
     z-index: 13;
-    backdrop-filter: brightness(var(--brightness));
+    backdrop-filter: brightness(var(--glass-brightness));
 }

@@ -45,16 +45,16 @@ const Glass: React.FC<GlassProps> = ({
   ...boxProps
 }) => {
   const cssVariables = {
-    '--corner-radius': typeof cornerRadius === 'number' ? `${cornerRadius}px` : cornerRadius,
-    '--base-strength': typeof baseStrength === 'number' ? `${baseStrength}px` : baseStrength,
-    '--extra-blur': typeof extraBlur === 'number' ? `${extraBlur}px` : extraBlur,
-    '--softness': typeof softness === 'number' ? `${softness}px` : softness,
-    '--tint-amount': tintAmount,
-    '--tint-saturation': tintSaturation,
-    '--tint-hue': tintHue,
-    '--contrast': contrast,
-    '--brightness': brightness,
-    '--invert': invert,
+    '--glass-corner-radius': typeof cornerRadius === 'number' ? `${cornerRadius}px` : cornerRadius,
+    '--glass-base-strength': typeof baseStrength === 'number' ? `${baseStrength}px` : baseStrength,
+    '--glass-extra-blur': typeof extraBlur === 'number' ? `${extraBlur}px` : extraBlur,
+    '--glass-softness': typeof softness === 'number' ? `${softness}px` : softness,
+    '--glass-tint-amount': tintAmount,
+    '--glass-tint-saturation': tintSaturation,
+    '--glass-tint-hue': tintHue,
+    '--glass-contrast': contrast,
+    '--glass-brightness': brightness,
+    '--glass-invert': invert,
   } as React.CSSProperties
 
   return (

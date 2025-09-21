@@ -15,7 +15,7 @@ export const MenuContent = React.forwardRef<HTMLDivElement, MenuContentProps>(
     return (
       <Portal disabled={!portalled} container={portalRef}>
         <ChakraMenu.Positioner>
-          <ChakraMenu.Content ref={ref} {...rest} />
+          <ChakraMenu.Content ref={ref} rounded={"2xl"} {...rest} />
         </ChakraMenu.Positioner>
       </Portal>
     )
@@ -101,12 +101,18 @@ export const MenuTriggerItem = React.forwardRef<
   )
 })
 
+export const MenuItem = React.forwardRef<
+  HTMLDivElement,
+  ChakraMenu.ItemProps
+>(function MenuItem(props, ref) {
+  return <ChakraMenu.Item ref={ref} rounded={"lg"} {...props} />
+})
+
 export const MenuRadioItemGroup = ChakraMenu.RadioItemGroup
 export const MenuContextTrigger = ChakraMenu.ContextTrigger
 export const MenuRoot = ChakraMenu.Root
 export const MenuSeparator = ChakraMenu.Separator
 
-export const MenuItem = ChakraMenu.Item
 export const MenuItemText = ChakraMenu.ItemText
 export const MenuItemCommand = ChakraMenu.ItemCommand
 export const MenuTrigger = ChakraMenu.Trigger
