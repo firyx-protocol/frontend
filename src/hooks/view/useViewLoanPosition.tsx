@@ -13,7 +13,7 @@ export type GetAllPositionsResult = {
   totalLiquidity: number;
 };
 
-interface UseViewLoanPosition {
+export interface UseViewLoanPosition {
   /**
    * Get the global fee growth for a specific loan position address.
    * @param loanPositionAddress - The address of the loan position.
@@ -107,7 +107,7 @@ export const useViewLoanPosition = (): UseViewLoanPosition => {
       throw new Error("Loan position address is required");
     }
     const resources = await aptos.getAccountResources({
-      accountAddress: CONTRACT_ADDRESS,
+      accountAddress: loanPositionAddress,
     });
     const convertedResources = snakeToCamel(resources) as MoveResource[];
     return convertedResources;
