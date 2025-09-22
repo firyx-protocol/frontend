@@ -9,8 +9,7 @@ export interface TokenMetadata {
   name?: string
   symbol?: string
   decimals?: number
-  iconUri?: string
-  projectUri?: string
+  logoUri?: string
 }
 
 export interface SignerCapability {

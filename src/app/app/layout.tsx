@@ -1,4 +1,4 @@
-import { VStack } from "@chakra-ui/react";
+import { Container, VStack } from "@chakra-ui/react";
 import { Header } from "./_components/Header";
 
 export default async function Layout({
@@ -9,7 +9,9 @@ export default async function Layout({
     return (
         <VStack height={"100vh"} width={"100vw"} gap={"6"} p={"4"}>
             <Header />
-            {children}
+            <Container maxW={"5xl"} height={"full"} width={"full"}>
+                {children}
+            </Container>
         </VStack>
     );
 }

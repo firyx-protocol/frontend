@@ -1,6 +1,8 @@
 "use client";
 
 import { Tooltip } from "@/components/ui/tooltip";
+import { PairTokensIcon } from "@/components/utils/pair-tokens-icon";
+import { BPS, RISK_FACTOR_BFS_VECTOR } from "@/constants";
 import { useHyperionGetPosition } from "@/hooks/useHyperionGetPosition";
 import { shortenAddress } from "@/libs/helpers";
 import { LoanPosition } from "@/types/core";
@@ -37,6 +39,7 @@ const columns: {
             header: 'Risk Factor',
             accessorKey: 'riskFactor',
             description: 'Controls rate escalation steepness above optimal utilization',
+            accessorFn: (item) => `${RISK_FACTOR_BFS_VECTOR[item.riskFactor] / BPS}`,
         },
         {
             header: 'Pool APR',
@@ -55,7 +58,7 @@ export const LoanPositionTable = (props: Props) => {
         { // example data
             address: '0xbffb8bf4ddb170ad72db6f82b0485cb9f4576d2f2037d322461eb4d93370bac3',
             poolAddress: '0xbffb8bf4ddb170ad72db6f82b0485cb9f4576d2f2037d322461eb4d93370bac3',
-            riskFactor: 5,
+            riskFactor: 2,
             poolApr: '3.5%',
             borrowedApr: '7.2%',
         }
@@ -80,21 +83,32 @@ export const LoanPositionTable = (props: Props) => {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {/* {data.map((item, index) => (
-                    // <TableRow key={index}>
-                    //     {columns.map((column) => (
-                    //         <TableCell key={column.accessorKey} className="px-4 py-2 border-b border-gray-200">
-                    //             {column.accessorFn ? column.accessorFn(item) : item[column.accessorKey]}
-                    //         </TableCell>
-                    //     ))}
-                    // </TableRow>
-
-                ))} */}
-                <TableRow>
-                    <PoolCell loanPosition={{
-                        posObject: { inner: "0x08731244c7d4e0c0924d9ae89be5a67e0753ab01213a4d5a0e55ac46b2c38fd4" }
-                    } as LoanPosition} />
-                </TableRow>
+                {
+                    data.map((item, index) => (
+                        <TableRow key={index}>
+                            {/* Loan position address */}
+                            <TableCell key={"address"}>
+                                {shortenAddress(item.address)}
+                            </TableCell>
+                            {/* Pool address */}
+                            <PoolCell loanPosition={{
+                                posObject: { inner: "0x08731244c7d4e0c0924d9ae89be5a67e0753ab01213a4d5a0e55ac46b2c38fd4" }
+                            } as LoanPosition} />
+                            {/* Risk factor */}
+                            <TableCell key={"riskFactor"}>
+                                {columns[2].accessorFn ? columns[2].accessorFn(item) : item.riskFactor}
+                            </TableCell>
+                            {/* Pool APR */}
+                            <TableCell key={"poolApr"}>
+                                {item.poolApr}
+                            </TableCell>
+                            {/* Borrowed APR */}
+                            <TableCell key={"borrowedApr"}>
+                                {item.borrowedApr}
+                            </TableCell>
+                        </TableRow>
+                    ))
+                }
             </TableBody>
         </TableRoot>
     );
@@ -115,6 +129,7 @@ const PoolCell = (props: PoolRowProps) => {
         },
         options: {
             enabled: !!account,
+            refetchOnWindowFocus: false,
         }
     })
 
@@ -124,29 +139,12 @@ const PoolCell = (props: PoolRowProps) => {
     return (
         <TableCell key={"poolAddress"} {...rest}>
             <HStack alignItems={"center"} gap={"3"}>
-                <Box position="relative" w="6" h="6" rounded="full" overflow="hidden">
-                    <Box w="46%" position="absolute" overflow="hidden" h="6">
-                        <Box w="6" h="6" display="flex" alignItems="center" justifyContent="center">
-                            <chakra.img
-                                src={position.pool[0].token2Info.logoUrl || ""}
-                                alt={position.pool[0].token2Info.symbol}
-                                objectFit="fill"
-                                pointerEvents="none"
-                            />
-                        </Box>
-                    </Box>
-                    <Box w="46%" right="0" position="absolute" overflow="hidden" h="6" zIndex={1}>
-                        <Box w="6" h="6" display="flex" alignItems="center" justifyContent="center">
-                            <chakra.img
-                                src={position.pool[0].token1Info.logoUrl || ""}
-                                alt={position.pool[0].token1Info.symbol}
-                                objectFit="fill"
-                                transform="translateX(-50%)"
-                                pointerEvents="none"
-                            />
-                        </Box>
-                    </Box>
-                </Box>
+                <PairTokensIcon
+                    tokenAUri={position.pool[0].token1Info.logoUrl || ""}
+                    tokenBUri={position.pool[0].token2Info.logoUrl || ""}
+                    tokenASymbol={position.pool[0].token1Info.symbol || ""}
+                    tokenBSymbol={position.pool[0].token2Info.symbol || ""}
+                />
                 <Text fontWeight={"normal"}>
                     {position.pool[0].token1Info.symbol}/{position.pool[0].token2Info.symbol}
                 </Text>
