@@ -1,6 +1,7 @@
-import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
+import { NETWORK } from "@/constants";
+import { Aptos, AptosConfig } from "@aptos-labs/ts-sdk";
 
 const config = new AptosConfig({
-    network: process.env.NETWORk as Network,
+    network: NETWORK,
 })
 export const aptos = new Aptos(config);

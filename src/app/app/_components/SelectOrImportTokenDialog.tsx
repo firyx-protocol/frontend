@@ -1,34 +1,74 @@
 "use client";
 
 import { DialogBody, DialogContent, DialogRoot, DialogTrigger } from "@/components/ui/dialog";
-import { TokenMetadata } from "@/types/core";
-import { aptos } from "@/utils/aptos";
 import { useWallet, } from "@aptos-labs/wallet-adapter-react";
-import { Box, BoxProps, DialogHeader, DialogRootProps, HStack, Image, Text } from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
+import { Box, BoxProps, DialogHeader, DialogRootProps, HStack, Image, Link, Text, VStack } from "@chakra-ui/react";
 import { BUILT_IN_TOKEN_INFO_LIST } from "../data/built-in";
-import { shortenAddress } from "@/libs/helpers";
 import { BigNumber } from "bignumber.js";
+import { useGetFungibleToken } from "@/hooks/useGetFungibleToken";
+import { useGetFungibleTokenBalance } from "@/hooks/useGetFungibleTokenBalance";
+import { ClipboardIconButton, ClipboardRoot } from "@/components/ui/clipboard";
+import { shortenAddress } from "@/libs/helpers";
+import { APTOS_EXPLORER_URL } from "@/constants";
+import { useState } from "react";
+import { TokenMetadata } from "@/types/core";
 
-type Props = DialogRootProps;
+interface SelectOrImportTokenDialogProps extends DialogRootProps {
+    /** Callback when a token is selected */
+    onTokenSelect?: (tokenData: TokenMetadata & { asset_type: string }) => void;
+    /** Currently selected token */
+    selectedToken?: TokenMetadata & { asset_type: string };
+    /** Whether to show balance information */
+    showBalance?: boolean;
+    /** Whether to close dialog after selection */
+    closeOnSelect?: boolean;
+}
 
-export const SelectOrImportTokenDialog = (props: Props) => {
+export const SelectOrImportTokenDialog = ({
+    onTokenSelect,
+    selectedToken,
+    showBalance = true,
+    closeOnSelect = true,
+    ...props
+}: SelectOrImportTokenDialogProps) => {
+    const [open, setOpen] = useState(false);
+
+    const handleTokenSelect = (tokenData: TokenMetadata & { asset_type: string }) => {
+        onTokenSelect?.(tokenData);
+
+        if (closeOnSelect) {
+            setOpen(false);
+        }
+    };
+
     return (
-        <DialogRoot {...props}>
+        <DialogRoot
+            size={"sm"}
+            motionPreset="slide-in-top"
+            open={open}
+            onOpenChange={({ open }) => setOpen(open)}
+            {...props}
+        >
             <DialogTrigger asChild>
                 {props.children}
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent rounded={"3xl"} bg={"bg.subtle"} backdrop={false}>
                 <DialogHeader>
-                    <Text>Select or Import Token</Text>
+                    <Text fontSize={"2xl"} fontWeight={"extrabold"}>Select Token</Text>
                 </DialogHeader>
                 <DialogBody>
-                    {BUILT_IN_TOKEN_INFO_LIST.map(token => (
-                        <TokenCard key={token.address}
-                            asset_type_v1={token.asset_type_v1}
-                            asset_type_v2={token.asset_type_v2}
-                            metadata={token} p={"2"} borderWidth={"1px"} borderRadius={"md"} mb={"2"} cursor={"pointer"} _hover={{ bgColor: 'gray.100' }} />
-                    ))}
+                    <VStack w={"full"} h={"full"} gap={"2"}>
+                        {BUILT_IN_TOKEN_INFO_LIST.map(token => (
+                            <TokenCard
+                                key={token.address}
+                                asset_type={token.address}
+                                onSelect={(tokenData) => handleTokenSelect({ ...tokenData, asset_type: token.address })}
+                                isSelected={selectedToken?.asset_type === token.address}
+                                showBalance={showBalance}
+                                cursor="pointer"
+                            />
+                        ))}
+                    </VStack>
                 </DialogBody>
             </DialogContent>
         </DialogRoot>
@@ -36,87 +76,110 @@ export const SelectOrImportTokenDialog = (props: Props) => {
 }
 
 interface TokenCardProps extends Omit<BoxProps, 'onSelect'> {
-    metadata?: TokenMetadata;
-    asset_type_v1?: string;
-    asset_type_v2?: string;
-    onSelect?: (address: string) => void;
+    asset_type?: string;
+    onSelect?: (tokenData: TokenMetadata) => void;
+    /** Whether this token is currently selected */
+    isSelected?: boolean;
+    /** Whether to show balance information */
+    showBalance?: boolean;
 }
-export const TokenCard = ({ metadata, asset_type_v1, asset_type_v2, onSelect, ...rest }: TokenCardProps) => {
-    const { account, } = useWallet();
 
-    const { data: tokenInfo, isLoading, error } = useQuery({
-        queryKey: ['token-metadata', asset_type_v1, asset_type_v2],
-        queryFn: async () => {
-            if(metadata) return metadata;
-            if (!asset_type_v1 && !asset_type_v2) return null;
+export const TokenCard = ({
+    asset_type,
+    onSelect,
+    isSelected = false,
+    showBalance = true,
+    ...rest
+}: TokenCardProps) => {
+    const { account, network } = useWallet();
 
-            const tokenInfos = await aptos.getFungibleAssetMetadata({
-                options: {
-                    where: {
-                        asset_type: { _eq: asset_type_v1 || asset_type_v2 }
-                    },
-                }
-            })
-            
-            return tokenInfos[0];
+    if (!asset_type) {
+        throw new Error("asset_type is required");
+    }
+
+    const { data: tokenInfo, isLoading } = useGetFungibleToken({
+        payload: {
+            asset_type: asset_type
         },
-        enabled: !!asset_type_v1 || !!asset_type_v2,
-        refetchOnWindowFocus: false,
+        options: {
+            staleTime: 5 * 60 * 1000, // 5 minutes
+            retry: 1,
+            refetchOnWindowFocus: false,
+        }
     });
 
-    const { data: tokenInfoBalance } = useQuery({
-        queryKey: ['token-balance', account?.address, tokenInfo, metadata],
-        queryFn: async () => {
-            if (!tokenInfo && !metadata) return 0;
-            if (!account?.address) return 0;
-
-            const decimals = tokenInfo?.decimals || metadata?.decimals || 0;
-
-            const balances = await aptos.getCurrentFungibleAssetBalances({
-                options: {
-                    where: {
-                        _or: [
-                            {
-                                asset_type_v1: { _eq: tokenInfo?.asset_type }
-                            },
-                            {
-                                asset_type_v2: { _eq: tokenInfo?.asset_type }
-                            }
-                        ],
-                        owner_address: {
-                            _eq: account.address.toString()
-                        },
-                    }
-                }
-            });
-            return balances.reduce((acc, curr) => acc + Number(curr.amount) / (BigNumber(10).pow(decimals).toNumber()), 0);
+    const { data: balance } = useGetFungibleTokenBalance({
+        payload: {
+            asset_type: asset_type,
+            owner: account?.address.toString() as string,
         },
-
-        enabled: !!account?.address && (!!tokenInfo || !!metadata),
-        refetchOnWindowFocus: false,
+        options: {
+            enabled: !!account?.address && showBalance,
+        }
     });
+
+    const handleClick = () => {
+        const tokenData: TokenMetadata = {
+            symbol: tokenInfo?.symbol,
+            name: tokenInfo?.name,
+            decimals: tokenInfo?.decimals,
+            logoUri: tokenInfo?.logoUri,
+        };
+
+        onSelect?.(tokenData);
+    };
 
     return (
-        <Box {...rest}>
-            <HStack>
-                <Image
-                    src={metadata?.logoUri || tokenInfo?.icon_uri || ''}
-                    alt={metadata?.symbol || tokenInfo?.symbol || ''}
-                    boxSize={'6'}
-                    borderRadius={'full'}
-                    objectFit={'cover'}
-                    bgColor={'gray.200'}
-                />
-                <Box>
-                    <Text>{(metadata?.symbol || tokenInfo?.symbol)?.toUpperCase()}</Text>
-                    <Text fontSize={'xs'} color={'gray.500'}>{metadata?.name || tokenInfo?.name || address}</Text>
-                </Box>
-                <Box>
-                    <Text fontWeight={"bold"}>{isLoading ? 'Loading...' : tokenInfoBalance}</Text>
-                    <Text fontSize={'xs'} color={'gray.500'}>
-                        {`${shortenAddress(tokenInfo?.asset_type.split('::')[0] || "")}`}
-                    </Text>
-                </Box>
+        <Box
+            w={"full"}
+            bg={isSelected ? "bg.panel" : "transparent"}
+            rounded={"2xl"}
+            p={"2"}
+            shadow={isSelected ? "sm" : "none"}
+            _hover={{
+                bg: isSelected ? 'transparent' : 'bg.panel',
+                shadow: 'sm',
+                transform: 'translateY(-1px)',
+                transition: 'all 0.2s'
+            }}
+            transition="all 0.2s"
+            {...rest}
+            onClick={handleClick}
+        >
+            <HStack justify={"space-between"} gap={"4"}>
+                <HStack gap={"2"}>
+                    <Image
+                        src={tokenInfo?.logoUri}
+                        alt={tokenInfo?.symbol}
+                        boxSize={'6'}
+                        borderRadius={'full'}
+                        objectFit={'cover'}
+                        bgColor={'gray.200'}
+                    />
+                    <Box>
+                        <Text fontWeight={"bold"}>{isLoading ? 'Loading...' : (tokenInfo?.symbol)}</Text>
+                        <Text fontSize={'xs'} color={'gray.500'}>{tokenInfo?.name}</Text>
+                    </Box>
+                </HStack>
+
+                {showBalance && (
+                    <VStack alignItems={"flex-end"} gap={0}>
+                        <Text fontSize={'md'} fontWeight={"bold"}>
+                            {balance ? BigNumber(balance).dividedBy(BigNumber(10).pow(tokenInfo?.decimals || 0)).toFixed() : '0'}
+                        </Text>
+                        <HStack>
+                            <Link fontSize={'xs'} color={'gray.500'} href={`${APTOS_EXPLORER_URL}/fungible_asset/${asset_type}?network=${network}`} target="_blank" rel="noopener noreferrer">
+                                {shortenAddress(asset_type, 4)}
+                            </Link>
+                            <ClipboardRoot>
+                                <ClipboardIconButton
+                                    value={asset_type}
+                                    size={'2xs'}
+                                />
+                            </ClipboardRoot>
+                        </HStack>
+                    </VStack>
+                )}
             </HStack>
         </Box>
     )

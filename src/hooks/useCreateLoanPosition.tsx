@@ -12,7 +12,7 @@ import {
 } from "@tanstack/react-query";
 import { aptos } from "@/utils/aptos";
 
-type CreateLoanPositionPayload = {
+export type CreateLoanPositionPayload = {
   tokenA: string;
   tokenB: string;
   tokenFee: string;

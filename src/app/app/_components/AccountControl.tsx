@@ -1,7 +1,7 @@
 "use client";
 
 import { MenuContent, MenuItem, MenuRoot, MenuTrigger } from "@/components/ui/menu";
-import { APTOS_EXPORER_URL } from "@/constants";
+import { APTOS_EXPLORER_URL } from "@/constants";
 import { shortenAddress } from "@/libs/helpers";
 import { SupportedWallets } from "@/utils/support-wallets";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
@@ -42,7 +42,7 @@ export const AccountControl = (props: Props) => {
     }
 
     const items = [
-        { value: "view", label: "View on Explorer", icon: FaRegUser, onClick: () => { router.push(`${APTOS_EXPORER_URL}&address=${account.address.toString()}`) } },
+        { value: "view", label: "View on Explorer", icon: FaRegUser, onClick: () => { router.push(`${APTOS_EXPLORER_URL}&address=${account.address.toString()}`) } },
         { value: "settings", label: "Setings", icon: RxSwitch, onClick: () => { } },
         { value: "disconnect", label: "Disconnect", icon: PiSignOutBold, onClick: () => disconnect() }
     ];
