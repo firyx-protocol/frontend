@@ -1,17 +1,27 @@
 import { CONTRACT_ADDRESS } from "@/config";
-import { UseQueryHook } from "@/types";
-import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
-import { useQuery } from "@tanstack/react-query";
+import {
+  MoveResource,
+  MoveValue,
+  PaginationArgs,
+} from "@aptos-labs/ts-sdk";
 import { aptos } from "@/utils/aptos";
+import { snakeToCamel } from "@/utils/convert";
 
-interface UseViewDepositSlot {
+export interface GetDepositSlotsResult {
+  decodedKey: string;
+  decodedValue?: string[];
+  key: string;
+  transactionVersion: string;
+}
+
+export interface UseViewDepositSlot {
   originalPrincipal: (depositSlotAddress: string) => Promise<string>;
   share: (depositSlotAddress: string) => Promise<string>;
   accumulatedDeposits: (depositSlotAddress: string) => Promise<string>;
   activeDeposits: () => Promise<number>;
   feeGrowthDebtA: (depositSlotAddress: string) => Promise<string>;
   feeGrowthDebtB: (depositSlotAddress: string) => Promise<string>;
-  getDepositSlotInfo: (depositSlotAddress: string) => Promise<any>;
+  getDepositSlotInfo: (depositSlotAddress: string) => Promise<MoveValue[]>;
   isActive: (depositSlotAddress: string) => Promise<boolean>;
   lastDepositTimestamp: (depositSlotAddress: string) => Promise<string>;
   lastWithdrawTimestamp: (depositSlotAddress: string) => Promise<string>;
@@ -19,6 +29,11 @@ interface UseViewDepositSlot {
   loanPositionAddress: (depositSlotAddress: string) => Promise<string>;
   timestampCreated: (depositSlotAddress: string) => Promise<string>;
   totalDeposits: () => Promise<string>;
+  getView: (depositSlotAddress: string) => Promise<MoveResource[]>;
+  getDepositSlots: (options?: {
+    options?: PaginationArgs | undefined;
+    accountAddress?: string;
+  }) => Promise<GetDepositSlotsResult[] | undefined>;
 }
 
 export const useViewDepositSlot = (): UseViewDepositSlot => {
@@ -104,7 +119,9 @@ export const useViewDepositSlot = (): UseViewDepositSlot => {
     return String(feeGrowthDebtB);
   };
 
-  const getDepositSlotInfo = async (depositSlotAddress: string) => {
+  const getDepositSlotInfo = async (
+    depositSlotAddress: string
+  ): Promise<MoveValue[]> => {
     if (!depositSlotAddress) {
       throw new Error("Deposit slot address is required");
     }
@@ -213,6 +230,48 @@ export const useViewDepositSlot = (): UseViewDepositSlot => {
     return String(totalDeposits);
   };
 
+  const getDepositSlots = async (options?: {
+    options?: PaginationArgs | undefined;
+    accountAddress?: string;
+  }): Promise<GetDepositSlotsResult[]> => {
+    const resources = await aptos.getAccountResource({
+      accountAddress: CONTRACT_ADDRESS,
+      resourceType: `${CONTRACT_ADDRESS}::deposit_slot::DepositSlotRegistry`,
+    });
+    const convertedResources = snakeToCamel(resources) as MoveResource;
+
+    type DepositSlotRegistryData = {
+      ownerSlots?: { handle: string };
+    };
+    const data = convertedResources as DepositSlotRegistryData;
+    const allPositions = await aptos.getTableItemsData({
+      options: {
+        where: {
+          table_handle: { _eq: String(data?.ownerSlots?.handle) },
+          ...(options?.accountAddress
+            ? { key: { _eq: options.accountAddress } }
+            : {})
+        },
+        ...options?.options,
+      },
+    });
+    const convertedAllPositions = snakeToCamel(allPositions);
+    return convertedAllPositions as GetDepositSlotsResult[];
+  };
+
+  const getView = async (
+    depositSlotAddress: string
+  ): Promise<MoveResource[]> => {
+    if (!depositSlotAddress) {
+      throw new Error("Deposit slot address is required");
+    }
+    const resources = await aptos.getAccountResources({
+      accountAddress: depositSlotAddress,
+    });
+    const convertedResources = snakeToCamel(resources) as MoveResource[];
+    return convertedResources;
+  };
+
   return {
     originalPrincipal,
     share,
@@ -228,5 +287,7 @@ export const useViewDepositSlot = (): UseViewDepositSlot => {
     loanPositionAddress,
     timestampCreated,
     totalDeposits,
+    getView,
+    getDepositSlots,
   };
 };

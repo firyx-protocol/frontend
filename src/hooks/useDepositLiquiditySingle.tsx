@@ -1,5 +1,5 @@
 import { CONTRACT_ADDRESS } from "@/config";
-import { UseHookPayload, UseMutationHook } from "@/types";
+import { UseMutationHook } from "@/types";
 import { aptos } from "@/utils/aptos";
 import { normalizeDepositLiquiditySingle } from "@/libs/normalizers";
 import {
@@ -8,8 +8,6 @@ import {
 } from "@aptos-labs/wallet-adapter-react";
 import {
   useMutation,
-  UseMutationOptions,
-  UseMutationResult,
 } from "@tanstack/react-query";
 
 type DepositLiquiditySinglePayload = {
@@ -38,17 +36,6 @@ export type DepositLiquiditySingleResult = {
   success: boolean;
 };
 
-type UseDepositLiquiditySingleOptions = UseMutationOptions<
-  DepositLiquiditySingleResult,
-  Error,
-  DepositLiquiditySinglePayload
->;
-
-type UseDepositLiquiditySingleResult = UseMutationResult<
-  DepositLiquiditySingleResult,
-  Error,
-  DepositLiquiditySinglePayload
->;
 
 /**
  * Custom hook to deposit liquidity into a single-sided loan position.
@@ -56,8 +43,8 @@ type UseDepositLiquiditySingleResult = UseMutationResult<
  * @returns Mutation result containing the status and data of the operation.
  */
 export const useDepositLiquiditySingle: UseMutationHook<
-  UseDepositLiquiditySingleOptions,
-  UseDepositLiquiditySingleResult
+  DepositLiquiditySinglePayload,
+  DepositLiquiditySingleResult
 > = (options) => {
   const { signAndSubmitTransaction } = useWallet();
 
@@ -70,6 +57,7 @@ export const useDepositLiquiditySingle: UseMutationHook<
         functionArguments: Object.values(payload),
       },
     };
+    console.log("Submitting transaction:", transaction);
     const response = await signAndSubmitTransaction(transaction);
     const executedTxn = await aptos.waitForTransaction({
       transactionHash: response.hash,

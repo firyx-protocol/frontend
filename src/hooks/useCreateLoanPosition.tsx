@@ -1,5 +1,5 @@
 import { CONTRACT_ADDRESS } from "@/config";
-import { UseHookPayload, UseMutationHook, UseQueryHook } from "@/types";
+import { UseMutationHook } from "@/types";
 import { normalizeLoanPositionCreation } from "@/libs/normalizers";
 import {
   InputTransactionData,
@@ -7,8 +7,6 @@ import {
 } from "@aptos-labs/wallet-adapter-react";
 import {
   useMutation,
-  UseMutationOptions,
-  UseMutationResult,
 } from "@tanstack/react-query";
 import { aptos } from "@/utils/aptos";
 
@@ -58,26 +56,14 @@ export type CreateLoanPositionResult = {
   success: boolean;
 };
 
-type UseCreateLoanPositionOptions = UseMutationOptions<
-  CreateLoanPositionResult,
-  Error,
-  CreateLoanPositionPayload
->;
-
-type UseCreateLoanPositionResult = UseMutationResult<
-  CreateLoanPositionResult,
-  Error,
-  CreateLoanPositionPayload
->;
-
 /**
  * Custom hook to create a new loan position.
  * @param options - Optional mutation options.
  * @returns Mutation result containing the status and data of the operation.
  */
 export const useCreateLoanPosition: UseMutationHook<
-  UseCreateLoanPositionOptions,
-  UseCreateLoanPositionResult
+  CreateLoanPositionPayload,
+  CreateLoanPositionResult
 > = (options) => {
   const { signAndSubmitTransaction } = useWallet();
 

@@ -16,7 +16,7 @@ export const normalizeLiquidityDeposit = (
     transaction = TransactionTypeResolver.toUserTransaction(transaction);
 
     // Find LiquidityDeposited event from the smart contract
-    const liquidityDepositedEvent = transaction.events.find((event: any) =>
+    const liquidityDepositedEvent = transaction.events.find((event) =>
       event.type.includes("LiquidityDeposited")
     );
 

@@ -3,6 +3,7 @@
  * @param tokenObject - The token object to extract information from.
  * @returns An object containing the address and objectAddress of the token.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const extractTokenInfo = (tokenObject: any) => {
   if (!tokenObject) return { address: '', objectAddress: '' };
   

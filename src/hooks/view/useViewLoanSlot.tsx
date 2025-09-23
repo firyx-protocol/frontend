@@ -1,7 +1,16 @@
 import { CONTRACT_ADDRESS } from "@/config";
 import { aptos } from "@/utils/aptos";
+import { snakeToCamel } from "@/utils/convert";
+import { MoveResource, PaginationArgs } from "@aptos-labs/ts-sdk";
 
-interface UseViewLoanSlot {
+export interface GetLoanSlotsResult {
+  decodedKey: string;
+  decodedValue?: string[];
+  key: string;
+  transactionVersion: string;
+}
+
+export interface UseViewLoanSlot {
   principal: (loanSlotAddress: string) => Promise<string>;
   reserve: (loanSlotAddress: string) => Promise<string>;
   debtIndexAtBorrow: (loanSlotAddress: string) => Promise<string>;
@@ -15,6 +24,11 @@ interface UseViewLoanSlot {
     curDebtIndex: string
   ) => Promise<string>;
   getLoanSlotInfo: (loanSlotAddress: string) => Promise<LoanSlotInfo>;
+  getView: (loanSlotAddress: string) => Promise<MoveResource[]>;
+  getLoanSlots: (options?: {
+    options?: PaginationArgs | undefined;
+    accountAddress?: string;
+  }) => Promise<GetLoanSlotsResult[] | undefined>;
 }
 
 interface LoanSlotInfo {
@@ -31,7 +45,7 @@ interface LoanSlotInfo {
   withdrawnAmount: string;
   availableWithdraw: string;
   lastPaymentTs: string;
-  arrearsStartTs: any;
+  arrearsStartTs: unknown;
 }
 
 export const useViewLoanSlot = (): UseViewLoanSlot => {
@@ -162,7 +176,9 @@ export const useViewLoanSlot = (): UseViewLoanSlot => {
     return String(currentDebt);
   };
 
-  const getLoanSlotInfo = async (loanSlotAddress: string): Promise<LoanSlotInfo> => {
+  const getLoanSlotInfo = async (
+    loanSlotAddress: string
+  ): Promise<LoanSlotInfo> => {
     if (!loanSlotAddress) {
       throw new Error("Loan slot address is required");
     }
@@ -176,6 +192,47 @@ export const useViewLoanSlot = (): UseViewLoanSlot => {
     return mappedLoanSlotInfo(loanSlotInfo);
   };
 
+  const getView = async (loanSlotAddress: string): Promise<MoveResource[]> => {
+    if (!loanSlotAddress) {
+      throw new Error("Loan slot address is required");
+    }
+    const resources = await aptos.getAccountResources({
+      accountAddress: loanSlotAddress,
+    });
+    const convertedResources = snakeToCamel(resources) as MoveResource[];
+    return convertedResources;
+  };
+
+  const getLoanSlots = async (options?: {
+    options?: PaginationArgs | undefined;
+    accountAddress?: string;
+  }): Promise<GetLoanSlotsResult[]> => {
+    const resources = await aptos.getAccountResource({
+      accountAddress: CONTRACT_ADDRESS,
+      resourceType: `${CONTRACT_ADDRESS}::loan_slot::LoanSlotRegistry`,
+    });
+    const convertedResources = snakeToCamel(resources) as MoveResource;
+
+    type LoanSlotRegistryData = {
+      ownerSlots?: { handle: string };
+    };
+    const data = convertedResources as LoanSlotRegistryData;
+    const allPositions = await aptos.getTableItemsData({
+      options: {
+        where: {
+          table_handle: { _eq: String(data?.ownerSlots?.handle) },
+          ...(options?.accountAddress
+            ? { key: { _eq: options.accountAddress } }
+            : {}),
+        },
+        ...options?.options,
+      },
+    });
+    const convertedAllPositions = snakeToCamel(allPositions);
+    console.log("All Positions Data:", convertedAllPositions);
+    return convertedAllPositions as GetLoanSlotsResult[];
+  };
+
   return {
     principal,
     reserve,
@@ -187,10 +244,12 @@ export const useViewLoanSlot = (): UseViewLoanSlot => {
     isActive,
     currentDebt,
     getLoanSlotInfo,
+    getView,
+    getLoanSlots,
   };
 };
 
-const mappedLoanSlotInfo = (loanSlotInfo: any): LoanSlotInfo => {
+const mappedLoanSlotInfo = (loanSlotInfo: unknown): LoanSlotInfo => {
   const [
     loanPosAddr,
     originalPrincipal,
@@ -206,23 +265,23 @@ const mappedLoanSlotInfo = (loanSlotInfo: any): LoanSlotInfo => {
     availableWithdraw,
     lastPaymentTs,
     arrearsStartTs,
-  ] = loanSlotInfo as any[]; // raw tuple
+  ] = loanSlotInfo as unknown[]; // raw tuple
 
   const mapped: LoanSlotInfo = {
-    loanPosAddr,
-    originalPrincipal,
-    principal,
-    share,
-    reserve,
-    debtIdxAtBorrow,
-    feeGrowthDebtA,
-    feeGrowthDebtB,
-    active,
-    createdAtTs,
-    withdrawnAmount,
-    availableWithdraw,
-    lastPaymentTs,
-    arrearsStartTs,
+    loanPosAddr: String(loanPosAddr),
+    originalPrincipal: String(originalPrincipal),
+    principal: String(principal),
+    share: String(share),
+    reserve: String(reserve),
+    debtIdxAtBorrow: String(debtIdxAtBorrow),
+    feeGrowthDebtA: String(feeGrowthDebtA),
+    feeGrowthDebtB: String(feeGrowthDebtB),
+    active: Boolean(active),
+    createdAtTs: String(createdAtTs),
+    withdrawnAmount: String(withdrawnAmount),
+    availableWithdraw: String(availableWithdraw),
+    lastPaymentTs: String(lastPaymentTs),
+    arrearsStartTs: arrearsStartTs,
   };
   return mapped;
 };
