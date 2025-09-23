@@ -1,4 +1,5 @@
-import { UseHookPayload, UseMutationHook } from "@/types";
+import { CONTRACT_ADDRESS } from "@/config";
+import { UseMutationHook } from "@/types";
 import { aptos } from "@/utils/aptos";
 import { normalizeLoanSlotClaimYieldAndRepay } from "@/utils/normalizers";
 import {
@@ -73,11 +74,9 @@ export const useLoanSlotClaimYieldAndRepay: UseMutationHook<
   const mutationFn = async (
     payload: LoanSlotClaimYieldAndRepayPayload
   ): Promise<LoanSlotClaimYieldAndRepayResult> => {
-    const contractAddress =
-      "0xe6f3d412f70a33dc85f431671afa237db4f9b3602e46aaa8850ba37e8a3cd729";
     const transaction: InputTransactionData = {
       data: {
-        function: `${contractAddress}::loan_position::loan_slot_claim_yield_and_repay`,
+        function: `${CONTRACT_ADDRESS}::loan_position::loan_slot_claim_yield_and_repay`,
         functionArguments: Object.values(payload),
       },
     };

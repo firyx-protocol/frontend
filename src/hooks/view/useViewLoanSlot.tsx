@@ -28,7 +28,7 @@ export interface UseViewLoanSlot {
   getLoanSlots: (options?: {
     options?: PaginationArgs | undefined;
     accountAddress?: string;
-  }) => Promise<GetLoanSlotsResult[]>;
+  }) => Promise<GetLoanSlotsResult[] | undefined>;
 }
 
 interface LoanSlotInfo {

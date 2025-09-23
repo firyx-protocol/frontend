@@ -1,5 +1,3 @@
-import { CONTRACT_ADDRESS } from "@/config";
-import { aptos } from "@/utils/aptos";
 import { useViewDepositSlot } from "./useViewDepositSlot";
 import { useViewLoanSlot } from "./useViewLoanSlot";
 
@@ -25,14 +23,14 @@ export const useViewAccount = (): UseViewAccount => {
         if (!accountAddress) {
             throw new Error("Account address is required");
         }
-        const [data] = await getDepositSlots({ accountAddress });
-        const [loanData] = await getLoanSlots({ accountAddress });
+        const [data] = await getDepositSlots({ accountAddress }) || [];
+        const [loanData] = await getLoanSlots({ accountAddress }) || [];
         console.log("Deposit Slots Data:", data);
         console.log("Loan Slots Data:", loanData);
 
         return {
-            depositSlots: data,
-            loanSlots: loanData,
+            depositSlots: data || {},
+            loanSlots: loanData || {},
         };
     }
 

@@ -17,12 +17,12 @@ export const normalizeLoanPositionCreation = (
     transaction = TransactionTypeResolver.toUserTransaction(transaction);
 
     // Find LoanPositionCreated event
-    const loanPositionEvent = transaction.events.find((event: any) =>
+    const loanPositionEvent = transaction.events.find((event) =>
       event.type.includes("LoanPositionCreated")
     );
 
     // Find CreatePositionEvent for additional info
-    const createPositionEvent = transaction.events.find((event: any) =>
+    const createPositionEvent = transaction.events.find((event) =>
       event.type.includes("CreatePositionEvent")
     );
 

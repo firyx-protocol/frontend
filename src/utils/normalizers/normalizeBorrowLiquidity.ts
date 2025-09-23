@@ -1,7 +1,6 @@
 import { BorrowLiquidityResult } from "@/hooks/useBorrowLiquidity";
 import {
   CommittedTransactionResponse,
-  UserTransactionResponse,
 } from "@aptos-labs/ts-sdk";
 import { TransactionTypeResolver } from "./transactionTypeResolver";
 
@@ -18,7 +17,7 @@ export const normalizeLiquidityBorrow = (
 
     transaction = TransactionTypeResolver.toUserTransaction(transaction);
 
-    const liquidityBorrowedEvent = transaction.events.find((event: any) =>
+    const liquidityBorrowedEvent = transaction.events.find((event) =>
       event.type.includes("LiquidityBorrowed")
     );
 

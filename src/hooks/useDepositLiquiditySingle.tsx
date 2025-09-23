@@ -1,5 +1,5 @@
 import { CONTRACT_ADDRESS } from "@/config";
-import { UseHookPayload, UseMutationHook } from "@/types";
+import { UseMutationHook } from "@/types";
 import { aptos } from "@/utils/aptos";
 import { normalizeDepositLiquiditySingle } from "@/utils/normalizers";
 import {
@@ -70,6 +70,7 @@ export const useDepositLiquiditySingle: UseMutationHook<
         functionArguments: Object.values(payload),
       },
     };
+    console.log("Submitting transaction:", transaction);
     const response = await signAndSubmitTransaction(transaction);
     const executedTxn = await aptos.waitForTransaction({
       transactionHash: response.hash,

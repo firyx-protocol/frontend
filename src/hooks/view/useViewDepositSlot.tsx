@@ -3,7 +3,6 @@ import {
   MoveResource,
   MoveValue,
   PaginationArgs,
-  WhereArg,
 } from "@aptos-labs/ts-sdk";
 import { aptos } from "@/utils/aptos";
 import { snakeToCamel } from "@/utils/convert";
@@ -34,7 +33,7 @@ export interface UseViewDepositSlot {
   getDepositSlots: (options?: {
     options?: PaginationArgs | undefined;
     accountAddress?: string;
-  }) => Promise<GetDepositSlotsResult[]>;
+  }) => Promise<GetDepositSlotsResult[] | undefined>;
 }
 
 export const useViewDepositSlot = (): UseViewDepositSlot => {
