@@ -30,7 +30,7 @@ export const RadioCardItem = React.forwardRef<
   const ContentWrapper = indicator ? RadioCard.ItemContent : React.Fragment
 
   return (
-    <RadioCard.Item {...rest}>
+    <RadioCard.Item bg={"bg.panel"} rounded={"2xl"} {...rest}>
       <RadioCard.ItemHiddenInput ref={ref} {...inputProps} />
       <RadioCard.ItemControl>
         {indicatorPlacement === "start" && indicator}

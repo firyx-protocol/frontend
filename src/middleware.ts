@@ -90,7 +90,8 @@ export const config = {
        - _next/image (image optimization files)
        - favicon.ico (favicon file)
        - public (public files)
+       - assets (assets files)
        */
-        "/((?!api|_next/static|_next/image|favicon.ico|public).*)",
+        "/((?!api|_next/static|_next/image|favicon.ico|assets).*)",
     ],
 };
