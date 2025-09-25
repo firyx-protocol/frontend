@@ -1,7 +1,7 @@
 import { CONTRACT_ADDRESS } from "@/config";
 import { UseMutationHook } from "@/types";
 import { aptos } from "@/utils/aptos";
-import { normalizeLiquidityDeposit } from "@/utils/normalizers";
+import { normalizeLiquidityDeposit } from "@/libs/normalizers";
 import {
   InputTransactionData,
   useWallet,

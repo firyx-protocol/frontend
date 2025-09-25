@@ -1,8 +1,8 @@
 import { CONTRACT_ADDRESS } from "@/config";
 import { UseHookPayload, UseMutationHook, UseQueryHook } from "@/types";
 import { aptos } from "@/utils/aptos";
-import { normalizeLoanPositionCreation } from "@/utils/normalizers";
-import { normalizeLiquidityBorrow } from "@/utils/normalizers/normalizeBorrowLiquidity";
+import { normalizeLoanPositionCreation } from "@/libs/normalizers";
+import { normalizeLiquidityBorrow } from "@/libs/normalizers/normalizeBorrowLiquidity";
 import {
   InputTransactionData,
   useWallet,
@@ -59,7 +59,7 @@ type UseBorrowLiquidityResult = UseMutationResult<
 export const useBorrowLiquidity: UseMutationHook<
   UseBorrowLiquidityOptions,
   UseBorrowLiquidityResult
-> = (options) => {
+> = (options): UseBorrowLiquidityResult => {
   const { signAndSubmitTransaction } = useWallet();
 
   /**

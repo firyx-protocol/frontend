@@ -1,7 +1,7 @@
 import { CONTRACT_ADDRESS } from "@/config";
 import { UseMutationHook } from "@/types";
 import { aptos } from "@/utils/aptos";
-import { normalizeLoanSlotClaimYieldAndRepay } from "@/utils/normalizers";
+import { normalizeLoanSlotClaimYieldAndRepay } from "@/libs/normalizers";
 import {
   InputTransactionData,
   useWallet,

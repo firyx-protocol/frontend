@@ -30,7 +30,7 @@ const WalletProvider = ({ children }: PropsWithChildren) => {
 
 export const Provider = ({ children }: PropsWithChildren) => {
   return (
-    <UIProvider>
+    <UIProvider forcedTheme="light">
       <QueryClientProvider client={queryClient}>
         <WalletProvider>
           {children}

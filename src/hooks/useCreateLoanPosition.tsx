@@ -1,6 +1,6 @@
 import { CONTRACT_ADDRESS } from "@/config";
 import { UseHookPayload, UseMutationHook, UseQueryHook } from "@/types";
-import { normalizeLoanPositionCreation } from "@/utils/normalizers";
+import { normalizeLoanPositionCreation } from "@/libs/normalizers";
 import {
   InputTransactionData,
   useWallet,
@@ -12,7 +12,7 @@ import {
 } from "@tanstack/react-query";
 import { aptos } from "@/utils/aptos";
 
-type CreateLoanPositionPayload = {
+export type CreateLoanPositionPayload = {
   tokenA: string;
   tokenB: string;
   tokenFee: string;
