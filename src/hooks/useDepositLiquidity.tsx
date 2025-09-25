@@ -2,6 +2,7 @@ import { CONTRACT_ADDRESS } from "@/constants";
 import { UseMutationHook } from "@/types";
 import { aptos } from "@/utils/aptos";
 import { normalizeLiquidityDeposit } from "@/libs/normalizers";
+import { normalizeLiquidityDeposit } from "@/libs/normalizers";
 import {
   InputTransactionData,
   useWallet,
@@ -39,6 +40,8 @@ export type DepositLiquidityResult = {
  * @returns Mutation result containing the status and data of the operation.
  */
 export const useDepositLiquidity: UseMutationHook<
+  DepositLiquidityPayload,
+  DepositLiquidityResult
   DepositLiquidityPayload,
   DepositLiquidityResult
 > = (options) => {

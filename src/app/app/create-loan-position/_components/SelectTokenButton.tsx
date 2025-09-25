@@ -43,7 +43,6 @@ export const SelectTokenButton = ({
         >
             <Button
                 w={"full"}
-                maxW={"xs"}
                 size={"2xl"}
                 rounded={"2xl"}
                 bg={"bg.panel"}

@@ -136,6 +136,7 @@ export const TokenCard = ({
             rounded={"2xl"}
             p={"2"}
             shadow={isSelected ? "sm" : "none"}
+            cursor={"pointer"}
             _hover={{
                 bg: isSelected ? 'transparent' : 'bg.panel',
                 shadow: 'sm',
@@ -168,7 +169,7 @@ export const TokenCard = ({
                             {balance ? BigNumber(balance).dividedBy(BigNumber(10).pow(tokenInfo?.decimals || 0)).toFixed() : '0'}
                         </Text>
                         <HStack>
-                            <Link fontSize={'xs'} color={'gray.500'} href={`${APTOS_EXPLORER_URL}/fungible_asset/${asset_type}?network=${network}`} target="_blank" rel="noopener noreferrer">
+                            <Link focusRing={"none"} fontSize={'xs'} color={'gray.500'} href={`${APTOS_EXPLORER_URL}/fungible_asset/${asset_type}?network=${network}`} target="_blank" rel="noopener noreferrer">
                                 {shortenAddress(asset_type, 4)}
                             </Link>
                             <ClipboardRoot>

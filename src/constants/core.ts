@@ -5,3 +5,8 @@ export const DEFAULT_DEADLINE_TS = 0xffff_ffff_ffff_ffff;
 export const RISK_FACTOR_BFS_VECTOR = [5000, 10000, 15000, 20000]; // 50%, 100%, 150%, 200%
 export const DURATION_YEAR_VECTOR_BPS = [2500, 5000, 10000, 20000]; // 25%, 50%, 100%, 200%
 export const MULTIPLIER_TERMS_ADJUSTMENT_BPS = [800, 900, 1000, 1100, 1200]; // 80%, 90%, 100%, 110%, 120%
+
+export const FEE_TIER_VECTOR_BPS = [100, 300, 500, 1000]; // 1%, 3%, 5%, 10%
+export const DEFAULT_SLOPE_BEFORE_KINK = 2000; // 20%
+export const DEFAULT_SLOPE_AFTER_KINK = 8000; // 80%
+export const DEFAULT_KINK_UTILIZATION = 8000; // 80%
