@@ -6,8 +6,8 @@ type Props = SVGProps<SVGSVGElement> & {
 
 const sizeMap = {
     sm: 16,
-    md: 24,
-    lg: 32
+    md: 20,
+    lg: 24
 };
 
 export const Favicon = ({ size = "md", ...props }: Props) => {

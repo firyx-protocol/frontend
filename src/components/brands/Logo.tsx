@@ -14,7 +14,7 @@ export const Logo = (props: Props) => {
         >
             <HStack width={"full"} height={"full"} alignItems={"center"} gap={"3"}>
                 <Favicon size={props.size === "sm" ? "sm" : props.size === "md" ? "md" : "lg"} />
-                <Text fontSize={"3xl"} fontWeight={"extrabold"}>
+                <Text fontSize={"2xl"} fontWeight={"extrabold"}>
                     Firyx
                 </Text>
             </HStack>
