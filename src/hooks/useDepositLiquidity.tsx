@@ -1,4 +1,4 @@
-import { CONTRACT_ADDRESS } from "@/config";
+import { CONTRACT_ADDRESS } from "@/constants";
 import { UseMutationHook } from "@/types";
 import { aptos } from "@/utils/aptos";
 import { normalizeLiquidityDeposit } from "@/libs/normalizers";
@@ -6,13 +6,9 @@ import {
   InputTransactionData,
   useWallet,
 } from "@aptos-labs/wallet-adapter-react";
-import {
-  useMutation,
-  UseMutationOptions,
-  UseMutationResult,
-} from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 
-type DepositLiquidityPayload = {
+export type DepositLiquidityPayload = {
   positionAddress: string;
   tokenA: string;
   tokenB: string;
@@ -37,29 +33,22 @@ export type DepositLiquidityResult = {
   success: boolean;
 };
 
-type UseDepositLiquidityOptions = UseMutationOptions<
-  DepositLiquidityResult,
-  Error,
-  DepositLiquidityPayload
->;
-
-type UseDepositLiquidityResult = UseMutationResult<
-  DepositLiquidityResult,
-  Error,
-  DepositLiquidityPayload
->;
-
 /**
  * Custom hook to deposit liquidity into a loan position.
  * @param options - Optional mutation options.
  * @returns Mutation result containing the status and data of the operation.
  */
 export const useDepositLiquidity: UseMutationHook<
-  UseDepositLiquidityOptions,
-  UseDepositLiquidityResult
+  DepositLiquidityPayload,
+  DepositLiquidityResult
 > = (options) => {
   const { signAndSubmitTransaction } = useWallet();
 
+  /**
+   * Mutation function to deposit liquidity
+   * @param payload - parameters required to deposit liquidity
+   * @returns {Promise<DepositLiquidityResult>} result of the mutation
+   */
   const mutationFn = async (
     payload: DepositLiquidityPayload
   ): Promise<DepositLiquidityResult> => {

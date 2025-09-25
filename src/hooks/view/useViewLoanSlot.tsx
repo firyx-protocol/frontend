@@ -1,6 +1,6 @@
-import { CONTRACT_ADDRESS } from "@/config";
+import { CONTRACT_ADDRESS } from "@/constants";
 import { aptos } from "@/utils/aptos";
-import { snakeToCamel } from "@/utils/convert";
+import { snakeToCamel } from "@/libs/helpers/convert";
 import { MoveResource, PaginationArgs } from "@aptos-labs/ts-sdk";
 
 export interface GetLoanSlotsResult {

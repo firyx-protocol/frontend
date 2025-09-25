@@ -1,11 +1,7 @@
-import { CONTRACT_ADDRESS } from "@/config";
-import {
-  MoveResource,
-  MoveValue,
-  PaginationArgs,
-} from "@aptos-labs/ts-sdk";
+import { CONTRACT_ADDRESS } from "@/constants";
+import { MoveResource, MoveValue, PaginationArgs } from "@aptos-labs/ts-sdk";
 import { aptos } from "@/utils/aptos";
-import { snakeToCamel } from "@/utils/convert";
+import { snakeToCamel } from "@/libs/helpers/convert";
 
 export interface GetDepositSlotsResult {
   decodedKey: string;
@@ -250,7 +246,7 @@ export const useViewDepositSlot = (): UseViewDepositSlot => {
           table_handle: { _eq: String(data?.ownerSlots?.handle) },
           ...(options?.accountAddress
             ? { key: { _eq: options.accountAddress } }
-            : {})
+            : {}),
         },
         ...options?.options,
       },

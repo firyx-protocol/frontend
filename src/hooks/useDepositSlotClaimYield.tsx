@@ -1,18 +1,14 @@
-import { CONTRACT_ADDRESS } from "@/config";
+import { CONTRACT_ADDRESS } from "@/constants";
 import { UseMutationHook } from "@/types";
 import { aptos } from "@/utils/aptos";
-import { normalizeDepositSlotClaimYield } from "@/utils/normalizers";
+import { normalizeDepositSlotClaimYield } from "@/libs/normalizers";
 import {
   InputTransactionData,
   useWallet,
 } from "@aptos-labs/wallet-adapter-react";
-import {
-  useMutation,
-  UseMutationOptions,
-  UseMutationResult,
-} from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 
-type DepositSlotClaimYieldPayload = {
+export type DepositSlotClaimYieldPayload = {
   positionAddress: string;
   depositSlotAddress: string;
 };
@@ -32,29 +28,22 @@ export type DepositSlotClaimYieldResult = {
   success: boolean;
 };
 
-type UseDepositSlotClaimYieldOptions = UseMutationOptions<
-  DepositSlotClaimYieldResult,
-  Error,
-  DepositSlotClaimYieldPayload
->;
-
-type UseDepositSlotClaimYieldResult = UseMutationResult<
-  DepositSlotClaimYieldResult,
-  Error,
-  DepositSlotClaimYieldPayload
->;
-
 /**
  * Custom hook to claim yield from a deposit slot.
  * @param options - Optional mutation options.
  * @returns Mutation result containing the status and data of the operation.
  */
 export const useDepositSlotClaimYield: UseMutationHook<
-  UseDepositSlotClaimYieldOptions,
-  UseDepositSlotClaimYieldResult
-> = (options) => {
+  DepositSlotClaimYieldPayload,
+  DepositSlotClaimYieldResult
+> = ({ options }) => {
   const { signAndSubmitTransaction } = useWallet();
 
+  /**
+   * Mutation function to claim yield from a deposit slot.
+   * @param payload - parameters required to claim yield from a deposit slot
+   * @returns {Promise<DepositSlotClaimYieldResult>} result of the mutation
+   */
   const mutationFn = async (
     payload: DepositSlotClaimYieldPayload
   ): Promise<DepositSlotClaimYieldResult> => {

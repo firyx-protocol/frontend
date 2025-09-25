@@ -10,3 +10,4 @@ export const APTOS_GRAPHQL_ENDPOINT = NETWORK === Network.MAINNET
 export const HYPERION_API_KEY = process.env.NEXT_PUBLIC_HYPERION_API_KEY || "";
 
 export * from "./core";
+export * from "./contract";

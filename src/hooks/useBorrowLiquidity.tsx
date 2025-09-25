@@ -1,21 +1,14 @@
-import { CONTRACT_ADDRESS } from "@/config";
-import { UseHookPayload, UseMutationHook, UseQueryHook } from "@/types";
+import { CONTRACT_ADDRESS } from "@/constants";
+import { UseMutationHook } from "@/types";
 import { aptos } from "@/utils/aptos";
-import { normalizeLoanPositionCreation } from "@/libs/normalizers";
-import { normalizeLiquidityBorrow } from "@/libs/normalizers/normalizeBorrowLiquidity";
+import { normalizeLiquidityBorrow } from "@/libs/normalizers";
 import {
   InputTransactionData,
   useWallet,
 } from "@aptos-labs/wallet-adapter-react";
-import {
-  useMutation,
-  UseMutationOptions,
-  UseMutationResult,
-  UseQueryOptions,
-  UseQueryResult,
-} from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 
-type BorrowLiquidityPayload = {
+export type BorrowLiquidityPayload = {
   positionAddress: string;
   tokenFee: string;
   amount: number;
@@ -39,27 +32,15 @@ export type BorrowLiquidityResult = {
   success: boolean;
 };
 
-type UseBorrowLiquidityOptions = UseMutationOptions<
-  BorrowLiquidityResult,
-  Error,
-  BorrowLiquidityPayload
->;
-
-type UseBorrowLiquidityResult = UseMutationResult<
-  BorrowLiquidityResult,
-  Error,
-  BorrowLiquidityPayload
->;
-
 /**
  * Hook to borrow liquidity from a loan position
  * @param options Mutation options from react-query
- * @returns {UseBorrowLiquidityResult} result of the mutation
+ * @returns Mutation result containing the status and data of the operation.
  */
 export const useBorrowLiquidity: UseMutationHook<
-  UseBorrowLiquidityOptions,
-  UseBorrowLiquidityResult
-> = (options): UseBorrowLiquidityResult => {
+  BorrowLiquidityPayload,
+  BorrowLiquidityResult
+> = ({ options }) => {
   const { signAndSubmitTransaction } = useWallet();
 
   /**

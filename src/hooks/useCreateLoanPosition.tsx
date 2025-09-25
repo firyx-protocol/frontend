@@ -1,15 +1,11 @@
-import { CONTRACT_ADDRESS } from "@/config";
-import { UseHookPayload, UseMutationHook, UseQueryHook } from "@/types";
+import { CONTRACT_ADDRESS } from "@/constants";
+import { UseMutationHook } from "@/types";
 import { normalizeLoanPositionCreation } from "@/libs/normalizers";
 import {
   InputTransactionData,
   useWallet,
 } from "@aptos-labs/wallet-adapter-react";
-import {
-  useMutation,
-  UseMutationOptions,
-  UseMutationResult,
-} from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { aptos } from "@/utils/aptos";
 
 export type CreateLoanPositionPayload = {
@@ -58,29 +54,22 @@ export type CreateLoanPositionResult = {
   success: boolean;
 };
 
-type UseCreateLoanPositionOptions = UseMutationOptions<
-  CreateLoanPositionResult,
-  Error,
-  CreateLoanPositionPayload
->;
-
-type UseCreateLoanPositionResult = UseMutationResult<
-  CreateLoanPositionResult,
-  Error,
-  CreateLoanPositionPayload
->;
-
 /**
  * Custom hook to create a new loan position.
  * @param options - Optional mutation options.
  * @returns Mutation result containing the status and data of the operation.
  */
 export const useCreateLoanPosition: UseMutationHook<
-  UseCreateLoanPositionOptions,
-  UseCreateLoanPositionResult
-> = (options) => {
+  CreateLoanPositionPayload,
+  CreateLoanPositionResult
+> = ({ options }) => {
   const { signAndSubmitTransaction } = useWallet();
 
+  /**
+   * Mutation function to create a loan position
+   * @param payload - parameters required to create a loan position
+   * @returns {Promise<CreateLoanPositionResult>} result of the mutation
+   */
   const mutationFn = async (
     payload: CreateLoanPositionPayload
   ): Promise<CreateLoanPositionResult> => {
