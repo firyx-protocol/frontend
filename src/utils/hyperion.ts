@@ -1,6 +1,6 @@
 import { HYPERION_API_KEY, NETWORK } from '@/constants'
 import { Network } from '@aptos-labs/ts-sdk'
-import { initHyperionSDK } from '@hyperionxyz/sdk'
+import { initHyperionSDK} from '@hyperionxyz/sdk'
 
 export const hyperion = initHyperionSDK({
     network: NETWORK as Network.MAINNET | Network.TESTNET, 

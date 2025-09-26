@@ -1,11 +1,7 @@
-import { CONTRACT_ADDRESS } from "@/config";
+import { CONTRACT_ADDRESS } from "@/constants";
 import { aptos } from "@/utils/aptos";
-import { snakeToCamel } from "@/utils/convert";
-import {
-  LedgerVersionArg,
-  MoveResource,
-  MoveValue,
-} from "@aptos-labs/ts-sdk";
+import { snakeToCamel } from "@/libs/helpers/convert";
+import { LedgerVersionArg, MoveResource, MoveValue } from "@aptos-labs/ts-sdk";
 
 export type GetAllPositionsResult = {
   positions: MoveValue[];
@@ -114,7 +110,7 @@ export const useViewLoanPosition = (): UseViewLoanPosition => {
   };
 
   const getAllPositions = async (
-    options?: (LedgerVersionArg) | undefined
+    options?: LedgerVersionArg | undefined
   ): Promise<GetAllPositionsResult> => {
     const positions = await aptos.getAccountResource({
       accountAddress: CONTRACT_ADDRESS,

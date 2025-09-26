@@ -25,7 +25,9 @@ export const useHyperionGetPoolInfo: UseQueryHook<UseHyperionGetPoolInfoPayload,
         }
 
         const poolByTokenPairAndFee: GetPoolByTokenPairAndFeeTierResponse = await hyperion.Pool.getPoolByTokenPairAndFeeTier({ token1: tokenA, token2: tokenB, feeTier: feeTier });
-
+        console.log("Pool info:", poolByTokenPairAndFee);
+        console.log(await hyperion.Pool.fetchPoolById({poolId:"0x8b2e4400b708581a704f320f05bf9387c2ef5cec3b175383466f831d2771a069"}))
+        
         return poolByTokenPairAndFee;
     }
 

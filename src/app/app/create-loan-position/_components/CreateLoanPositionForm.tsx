@@ -11,14 +11,16 @@ import {
     Box,
     Button,
     Center,
-    Image
+    Image,
+    FieldRoot,
+    FieldLabel,
+    FieldHelperText
 } from "@chakra-ui/react";
-import { ReactNode, useState } from "react";
+import { ReactNode, useMemo, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Controller, FormProvider, SubmitErrorHandler, SubmitHandler, useForm, useFormContext } from "react-hook-form";
 import { HiCheck } from "react-icons/hi2";
 
-import { SelectTokenButton } from "./SelectTokenButton";
 import { StepsContent, StepsIndicator, StepsItem, StepsList, StepsRoot } from "@/components/ui/steps";
 import { SelectContent, SelectItem, SelectRoot, SelectTrigger, SelectValueText } from "@/components/ui/select";
 import { RadioCardRoot, RadioCardItem } from "@/components/ui/radio-card";
@@ -26,9 +28,16 @@ import { Tooltip } from "@/components/ui/tooltip";
 import Glass from "@/components/utils/glass/glass";
 
 import { CreateLoanPositionPayload, useCreateLoanPosition } from "@/hooks/useCreateLoanPosition";
-import { DEFAULT_KINK_UTILIZATION, DEFAULT_SLOPE_AFTER_KINK, DEFAULT_SLOPE_BEFORE_KINK, FEE_TIER_VECTOR_BPS } from "@/constants/core";
+import { BPS, DEFAULT_KINK_UTILIZATION, DEFAULT_SLOPE_AFTER_KINK, DEFAULT_SLOPE_BEFORE_KINK, DEFAULT_TICK_SCALING_BFS, U32_MAX } from "@/constants/core";
 import { TokenMetadata } from "@/types/core";
 import { toaster } from "@/components/ui/toaster";
+import { useHyperionGetPoolIds } from "@/hooks/useHyperionGetPoolIds";
+import { shortenAddress } from "@/libs/helpers";
+import { useHyperionGetPoolById } from "@/hooks/useHyperionGetPoolById";
+import { useHyperionGetPoolResource } from "@/hooks/useHyperionGetPoolResource";
+import { roundTickBySpacing, priceToTick, tickToPrice } from "@hyperionxyz/sdk";
+import { sqrtPriceX64ToPrice } from "@/libs/helpers/math";
+import { NumberInputField, NumberInputRoot } from "@/components/ui/number-input";
 
 // Constants
 const RISK_FACTOR_GRAPHS = [
@@ -46,30 +55,19 @@ const ANIMATION_CONFIG = {
 };
 
 type Props = StackProps;
-type FormInput = CreateLoanPositionPayload;
+type FormInput = Pick<CreateLoanPositionPayload, "feeTier" | "riskFactor" | "slopeBeforeKink" | "slopeAfterKink" | "kinkUtilization"> & {
+    poolId: string;
+    minPrice: number;
+    maxPrice: number;
+};
 
-const feeTierOptions = createListCollection({
-    items: FEE_TIER_VECTOR_BPS.map((fee, index) => ({
-        label: `${fee / 100}%`,
-        value: index
-    })),
-    itemToString: (item) => item?.label || '',
-});
+const FIXED_DISPLAY_DECIMALS = 6;
 
 // Helper functions
 const formatPercentage = (value: number | undefined): string =>
-    value ? `${(value / 100).toFixed(2)}%` : 'N/A';
+    value ? `${(value / 100).toFixed(2)}%` : 'N/A';// Token Image Component
 
-const getValidImageSrc = (src: string | undefined): string | null =>
-    src && src.trim() !== '' ? src : null;
 
-const createTokenData = (metadata: TokenMetadata | null | undefined, assetType: string) => ({
-    symbol: metadata?.symbol || '',
-    logoUri: getValidImageSrc(metadata?.logoUri),
-    asset_type: assetType || '',
-});
-
-// Token Image Component
 interface TokenImageProps {
     logoUri: string | null;
     symbol: string;
@@ -102,14 +100,14 @@ const TokenImage = ({ logoUri, symbol, size = '6' }: TokenImageProps) => (
 
 // Token Pair Display Component
 interface TokenPairProps {
-    tokens: Array<{ symbol: string; logoUri: string | null; asset_type: string }>;
+    tokens: TokenMetadata[];
 }
 
 const TokenPair = ({ tokens }: TokenPairProps) => (
     <HStack w="full" flexShrink={0} justify="center" p="4">
         {tokens.map((token, index) => (
             <HStack key={index} w="fit" gap="4">
-                <TokenImage logoUri={token.logoUri} symbol={token.symbol} />
+                <TokenImage logoUri={token.logoUri!} symbol={token.symbol!} />
                 <Text fontWeight="extrabold" textTransform="uppercase" color="fg" fontSize="2xl">
                     {token.symbol || '-'}
                 </Text>
@@ -155,74 +153,208 @@ const AnimatedGraph = ({ riskFactor }: AnimatedGraphProps) => (
 );
 
 interface Steps1Props extends StackProps {
-    selectTokenA?: (token: TokenMetadata) => void;
-    selectTokenB?: (token: TokenMetadata) => void;
     setStep?: (step: number) => void;
 }
 const Step1 = (props: Steps1Props) => {
-    const { control } = useFormContext<FormInput>();
-    const { selectTokenA, selectTokenB, setStep } = props;
+    const { control, watch, setValue } = useFormContext<FormInput>();
+    const { setStep } = props;
+    const poolId = watch("poolId");
+
+    const { data: pools, isLoading: isLoadingPools } = useHyperionGetPoolIds({
+        options: {
+            staleTime: Infinity,
+        }
+    });
+
+    // Get pool resource to get tickSpacing with caching
+    const { data: poolResource } = useHyperionGetPoolResource({
+        payload: { id: poolId },
+        options: {
+            enabled: !!poolId,
+            staleTime: Infinity,
+        }
+    });
+
+    const { data: pool } = useHyperionGetPoolById({
+        payload: { id: poolId },
+        options: {
+            queryKey: ['hyperion', 'getPoolById', poolId],
+            enabled: !!poolId,
+            staleTime: Infinity,
+        }
+    });
+
+
+    const poolCollection = useMemo(() => {
+        return createListCollection({
+            items: pools?.map((pool) => ({
+                label: shortenAddress(pool.id),
+                value: pool.id,
+            })) || [],
+            itemToString: (item) => item?.label || '',
+        })
+    }, [pools]);
+
+    const tokenAInfo = useMemo(() => {
+        if (!pool) return null;
+
+        return pool.pool.token1Info;
+    }, [pool]);
+
+    const tokenBInfo = useMemo(() => {
+        if (!pool) return null;
+
+        return pool.pool.token2Info;
+    }, [pool]);
+
+    const currentPrice = useMemo(() => {
+        if (!pool && !tokenAInfo && !tokenBInfo) return null;
+
+        return sqrtPriceX64ToPrice(pool?.pool.sqrtPrice || "", tokenAInfo?.decimals || 8, tokenBInfo?.decimals || 8);
+    }, [pool, tokenAInfo, tokenBInfo]);
+
+    const defaultMinPrice = useMemo(() => {
+        if (!currentPrice || currentPrice === 0) return 0;
+
+        return currentPrice * (1 - (DEFAULT_TICK_SCALING_BFS / BPS));
+    }, [currentPrice]);
+
+    const defaultMaxPrice = useMemo(() => {
+        if (!currentPrice || currentPrice === 0) return 0;
+
+        return currentPrice * (1 + (DEFAULT_TICK_SCALING_BFS / BPS));
+    }, [currentPrice]);
+
+    const handlePriceBlur = useCallback((priceValue: string, fieldOnChange: (value: number | string) => void) => {
+        if (priceValue === "∞" || priceValue === "" || parseFloat(priceValue) === 0) {
+            fieldOnChange(0);
+            return;
+        }
+
+        if (!pool || !tokenAInfo || !tokenBInfo) {
+            return;
+        }
+
+        const decimalsRatio = Math.pow(10, (tokenAInfo?.decimals || 8) - (tokenBInfo?.decimals || 8));
+        console.log("decimalsRatio", decimalsRatio);
+        console.log("priceValue", priceValue);
+        const tick = priceToTick({
+            price: parseFloat(priceValue),
+            feeTierIndex: pool.pool.feeTier,
+            decimalsRatio,
+        });
+
+        if (tick !== null) {
+            const roundedTick = roundTickBySpacing(Number(tick), pool.pool.feeTier);
+            fieldOnChange(tickToPrice({
+                tick: roundedTick,
+                decimalsRatio,
+            }));
+        }
+    }, [pool, tokenAInfo, tokenBInfo]);
 
     return (
         <VStack w={"full"} h={"full"} gap={"8"} {...props}>
-            <Wrapper label="Select pair tokens" w={"full"}>
+            <Wrapper label="Select pool" w={"full"}>
                 <HStack w={"full"} gap={"6"}>
                     <Controller
                         control={control}
-                        name="tokenA"
+                        name="poolId"
                         render={({ field }) => (
-                            <SelectTokenButton
-                                onTokenSelect={(token) => {
-                                    selectTokenA?.(token);
-                                    field.onChange(token.asset_type);
-                                }}
-                                flex={1}
-                            />
+                            <SelectRoot
+                                size={"lg"}
+                                name={field.name}
+                                disabled={isLoadingPools}
+                                onValueChange={({ value }) => field.onChange(value[0])}
+                                onInteractOutside={() => field.onBlur()}
+                                collection={poolCollection}
+                            >
+                                <SelectTrigger cursor={"pointer"}>
+                                    <SelectValueText placeholder={
+                                        isLoadingPools ? "Loading pools..." : "Choose pool id"
+                                    } />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {poolCollection.items.map((item) => (
+                                        <SelectItem
+                                            key={item.value}
+                                            item={item}
+                                        >
+                                            {item.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </SelectRoot>
                         )}
                     />
-                    <Controller
-                        control={control}
-                        name="tokenB"
-                        render={({ field }) => (
-                            <SelectTokenButton
-                                onTokenSelect={(token) => {
-                                    selectTokenB?.(token);
-                                    field.onChange(token.asset_type);
-                                }}
-                                flex={1}
-                            />
-                        )}
-                    />
+
                 </HStack>
             </Wrapper>
-            <Wrapper label="Choose fee tier" w={"full"}>
-                <Controller
-                    control={control}
-                    name="feeTier"
-                    render={({ field }) => (
-                        <SelectRoot
-                            size={"lg"}
-                            name={field.name}
-                            onValueChange={({ value }) => field.onChange(value[0])}
-                            onInteractOutside={() => field.onBlur()}
-                            collection={feeTierOptions}
-                        >
-                            <SelectTrigger cursor={"pointer"}>
-                                <SelectValueText placeholder="Choose fee tier" />
-                            </SelectTrigger>
-                            <SelectContent >
-                                {feeTierOptions.items.map((option) => (
-                                    <SelectItem
-                                        key={option.value}
-                                        item={option}
-                                    >
-                                        {option.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </SelectRoot>
+            <Wrapper label="Set tick range" w={"full"}>
+                <VStack w="full" gap="4">
+                    {pool && (
+                        <><Text fontSize="xs" color="fg.muted" textAlign="center">
+                            Current price: 1 {tokenAInfo?.symbol} = {currentPrice} {tokenBInfo?.symbol}
+                        </Text><HStack w="full" gap="4">
+                                <Controller
+                                    control={control}
+                                    name="minPrice"
+                                    defaultValue={defaultMinPrice}
+                                    render={({ field }) => {
+                                        return (
+                                            <FieldRoot>
+                                                <FieldLabel>Min Price</FieldLabel>
+                                                <NumberInputRoot
+                                                    w={"full"}
+                                                    value={Number(field.value).toString()}
+                                                    onValueChange={(e) => field.onChange(e.value)}
+                                                    onBlur={() => handlePriceBlur(Number(field.value).toString(), field.onChange)}
+                                                    step={1}
+                                                    formatOptions={{
+                                                        compactDisplay: 'short',
+                                                        maximumFractionDigits: FIXED_DISPLAY_DECIMALS,
+                                                    }}
+                                                >
+                                                    <NumberInputField />
+                                                </NumberInputRoot>
+                                                <FieldHelperText>
+                                                    {pool?.pool.token2Info.symbol} PER {pool?.pool.token1Info.symbol}
+                                                </FieldHelperText>
+                                            </FieldRoot>
+                                        );
+                                    }} />
+                                <Text fontSize="3xl" fontWeight="extrabold" color="fg">-</Text>
+                                <Controller
+                                    control={control}
+                                    name="maxPrice"
+                                    defaultValue={defaultMaxPrice}
+                                    render={({ field }) => {
+                                        return (
+                                            <FieldRoot>
+                                                <FieldLabel>Max Price</FieldLabel>
+                                                <NumberInputRoot
+                                                    w={"full"}
+                                                    value={Number(field.value).toString()}
+                                                    onValueChange={(e) => field.onChange(e.value)}
+                                                    onBlur={() => handlePriceBlur(Number(field.value).toString(), field.onChange)}
+                                                    step={poolResource?.tickSpacing}
+                                                    formatOptions={{
+                                                        compactDisplay: 'short',
+                                                        maximumFractionDigits: FIXED_DISPLAY_DECIMALS,
+                                                    }}
+                                                >
+                                                    <NumberInputField />
+                                                </NumberInputRoot>
+                                                <FieldHelperText>
+                                                    {pool?.pool.token2Info.symbol} PER {pool?.pool.token1Info.symbol}
+                                                </FieldHelperText>
+                                            </FieldRoot>
+                                        );
+                                    }} />
+                            </HStack>
+                        </>
                     )}
-                />
+                </VStack>
             </Wrapper>
             <Button
                 size={"2xl"}
@@ -315,20 +447,24 @@ const Step2 = ({ onSubmit, ...props }: Steps2Props) => {
     )
 }
 
-interface PreviewProps extends StackProps {
-    tokenAMetadata?: TokenMetadata;
-    tokenBMetadata?: TokenMetadata;
-}
+type PreviewProps = StackProps;
 
 const Preview = (props: PreviewProps) => {
     const { watch } = useFormContext<FormInput>();
-    const tokenA = watch("tokenA");
-    const tokenB = watch("tokenB");
     const slopeBeforeKink = watch("slopeBeforeKink");
     const slopeAfterKink = watch("slopeAfterKink");
     const kinkUtilization = watch("kinkUtilization");
     const riskFactor = watch("riskFactor");
-    const { tokenAMetadata, tokenBMetadata } = props;
+    const poolId = watch("poolId");
+
+    const { data: pool } = useHyperionGetPoolById({
+        payload: { id: poolId },
+        options: {
+            queryKey: ['hyperion', 'getPoolById', poolId],
+            enabled: !!poolId,
+            staleTime: Infinity,
+        }
+    });
 
     const items = [
         { label: 'Slope Before Kink', value: formatPercentage(slopeBeforeKink) },
@@ -336,10 +472,24 @@ const Preview = (props: PreviewProps) => {
         { label: 'Kink Utilization', value: formatPercentage(kinkUtilization) },
     ];
 
-    const tokens = [
-        createTokenData(tokenAMetadata, tokenA),
-        createTokenData(tokenBMetadata, tokenB)
-    ];
+    const tokens = useMemo<TokenMetadata[]>(() => {
+        if (!pool) return [];
+
+        return [
+            {
+                name: pool.pool.token1Info.name,
+                symbol: pool.pool.token1Info.symbol,
+                decimals: pool.pool.token1Info.decimals,
+                logoUri: pool.pool.token1Info.logoUrl,
+            },
+            {
+                name: pool.pool.token2Info.name,
+                symbol: pool.pool.token2Info.symbol,
+                decimals: pool.pool.token2Info.decimals,
+                logoUri: pool.pool.token2Info.logoUrl,
+            }
+        ];
+    }, [pool]);
 
     return (
         <VStack
@@ -423,16 +573,55 @@ export const CreateLoanPositionForm = (props: Props) => {
                 });
             }
         }
-    })
-    const [tokenAMetadata, setTokenAMetadata] = useState<TokenMetadata | null>(null);
-    const [tokenBMetadata, setTokenBMetadata] = useState<TokenMetadata | null>(null);
+    });
+
+    const poolId = form.watch("poolId");
+
+    const { data: pool } = useHyperionGetPoolById({
+        payload: { id: poolId },
+        options: {
+            queryKey: ['hyperion', 'getPoolById', poolId],
+            enabled: !!poolId,
+            staleTime: Infinity,
+        }
+    });
 
     const onSubmitHandler: SubmitHandler<FormInput> = async (data) => {
-        await createLoanPosition(data);
-    }
+        if (!pool) return;
+
+        const decimalsRatio = Math.pow(10, (pool.pool.token1Info.decimals || 8) - (pool.pool.token2Info.decimals || 8));
+        const tickLower = priceToTick({
+            price: data.minPrice,
+            feeTierIndex: pool.pool.feeTier,
+            decimalsRatio,
+        })?.toNumber();
+
+        const tickUpper = priceToTick({
+            price: data.maxPrice,
+            feeTierIndex: pool.pool.feeTier,
+            decimalsRatio,
+        })?.toNumber();
+
+        if (tickLower === undefined || tickUpper === undefined) throw new Error("Invalid tick range");
+
+        const convertedData: CreateLoanPositionPayload = {
+            tokenA: pool.pool.token1,
+            tokenB: pool.pool.token2,
+            tokenFee: pool.pool.token1, // Default to tokenA
+            feeTier: pool.pool.feeTier,
+            tickLower: tickLower < 0 ? U32_MAX + tickLower : tickLower,
+            tickUpper: tickUpper < 0 ? U32_MAX + tickUpper : tickUpper,
+            slopeBeforeKink: data.slopeBeforeKink,
+            slopeAfterKink: data.slopeAfterKink,
+            kinkUtilization: data.kinkUtilization,
+            riskFactor: data.riskFactor,
+        };
+
+        await createLoanPosition(convertedData);
+    };
 
     const onErrorHandler: SubmitErrorHandler<FormInput> = (errors) => {
-    }
+    };
 
     const handleManualSubmit = () => {
         form.handleSubmit(onSubmitHandler, onErrorHandler)();
@@ -469,8 +658,6 @@ export const CreateLoanPositionForm = (props: Props) => {
                         >
                             {index === 0 &&
                                 <Step1
-                                    selectTokenA={setTokenAMetadata}
-                                    selectTokenB={setTokenBMetadata}
                                     setStep={setStep}
                                 />
                             }
@@ -478,10 +665,7 @@ export const CreateLoanPositionForm = (props: Props) => {
                         </StepsContent>
                     ))}
                 </StepsRoot>
-                <Preview
-                    tokenAMetadata={tokenAMetadata || undefined}
-                    tokenBMetadata={tokenBMetadata || undefined}
-                />
+                <Preview />
             </HStack>
         </FormProvider>
     );

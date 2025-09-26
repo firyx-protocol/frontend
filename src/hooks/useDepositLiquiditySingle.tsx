@@ -1,4 +1,4 @@
-import { CONTRACT_ADDRESS } from "@/config";
+import { CONTRACT_ADDRESS } from "@/constants";
 import { UseMutationHook } from "@/types";
 import { aptos } from "@/utils/aptos";
 import { normalizeDepositLiquiditySingle } from "@/libs/normalizers";
@@ -6,11 +6,9 @@ import {
   InputTransactionData,
   useWallet,
 } from "@aptos-labs/wallet-adapter-react";
-import {
-  useMutation,
-} from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 
-type DepositLiquiditySinglePayload = {
+export type DepositLiquiditySinglePayload = {
   positionAddress: string;
   fromA: string;
   toB: string;
@@ -36,7 +34,6 @@ export type DepositLiquiditySingleResult = {
   success: boolean;
 };
 
-
 /**
  * Custom hook to deposit liquidity into a single-sided loan position.
  * @param options - Optional mutation options.
@@ -45,7 +42,7 @@ export type DepositLiquiditySingleResult = {
 export const useDepositLiquiditySingle: UseMutationHook<
   DepositLiquiditySinglePayload,
   DepositLiquiditySingleResult
-> = (options) => {
+> = ({ options }) => {
   const { signAndSubmitTransaction } = useWallet();
 
   const mutationFn = async (
@@ -71,7 +68,11 @@ export const useDepositLiquiditySingle: UseMutationHook<
     return normalizedResponse;
   };
 
-  return useMutation<DepositLiquiditySingleResult, Error, DepositLiquiditySinglePayload>({
+  return useMutation<
+    DepositLiquiditySingleResult,
+    Error,
+    DepositLiquiditySinglePayload
+  >({
     mutationKey: ["depositLiquiditySingle"],
     mutationFn,
     ...options,
