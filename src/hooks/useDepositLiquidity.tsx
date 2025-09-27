@@ -2,7 +2,6 @@ import { CONTRACT_ADDRESS } from "@/constants";
 import { UseMutationHook } from "@/types";
 import { aptos } from "@/utils/aptos";
 import { normalizeLiquidityDeposit } from "@/libs/normalizers";
-import { normalizeLiquidityDeposit } from "@/libs/normalizers";
 import {
   InputTransactionData,
   useWallet,
@@ -20,7 +19,7 @@ export type DepositLiquidityPayload = {
 };
 
 export type DepositLiquidityResult = {
-  positionAddress: string;
+  loanPositionAddress: string;
   lenderAddress: string;
   depositSlotAddress: string;
   liquidityAmount: string;
@@ -42,9 +41,7 @@ export type DepositLiquidityResult = {
 export const useDepositLiquidity: UseMutationHook<
   DepositLiquidityPayload,
   DepositLiquidityResult
-  DepositLiquidityPayload,
-  DepositLiquidityResult
-> = (options) => {
+> = ({options}) => {
   const { signAndSubmitTransaction } = useWallet();
 
   /**
@@ -65,11 +62,11 @@ export const useDepositLiquidity: UseMutationHook<
     const executedTxn = await aptos.waitForTransaction({
       transactionHash: response.hash,
     });
-    console.log("Raw transaction response:", response);
     const normalizedResponse = normalizeLiquidityDeposit(executedTxn);
     if (!normalizedResponse) {
       throw new Error("Failed to normalize deposit liquidity response");
     }
+    console.log("Raw transaction response:", response);
     return normalizedResponse;
   };
 

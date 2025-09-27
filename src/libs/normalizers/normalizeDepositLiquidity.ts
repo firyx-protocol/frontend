@@ -25,7 +25,7 @@ export const normalizeLiquidityDeposit = (
     const eventData = liquidityDepositedEvent.data;
 
     return {
-      positionAddress: eventData.position,
+      loanPositionAddress: eventData.position,
       lenderAddress: eventData.lender,
       depositSlotAddress: eventData.deposit_slot,
       liquidityAmount: eventData.amount?.toString() || "0",

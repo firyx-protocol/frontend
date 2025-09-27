@@ -39,7 +39,6 @@ import { roundTickBySpacing, priceToTick, tickToPrice } from "@hyperionxyz/sdk";
 import { sqrtPriceX64ToPrice } from "@/libs/helpers/math";
 import { NumberInputField, NumberInputRoot } from "@/components/ui/number-input";
 
-// Constants
 const RISK_FACTOR_GRAPHS = [
     '/assets/ConservativeGraph.svg',
     '/assets/StandardGraph.svg',
@@ -63,10 +62,30 @@ type FormInput = Pick<CreateLoanPositionPayload, "feeTier" | "riskFactor" | "slo
 
 const FIXED_DISPLAY_DECIMALS = 6;
 
-// Helper functions
-const formatPercentage = (value: number | undefined): string =>
-    value ? `${(value / 100).toFixed(2)}%` : 'N/A';// Token Image Component
+// Custom hook để tránh duplicate pool fetching
+const usePoolData = (poolId: string) => {
+    const { data: poolResource } = useHyperionGetPoolResource({
+        payload: { id: poolId },
+        options: {
+            enabled: !!poolId,
+            staleTime: 5 * 60 * 1000, // 5 minutes for pool resource
+        }
+    });
 
+    const { data: pool } = useHyperionGetPoolById({
+        payload: { id: poolId },
+        options: {
+            queryKey: ['hyperion', 'getPoolById', poolId],
+            enabled: !!poolId,
+            staleTime: 30 * 1000, // 30 seconds for pool data (more dynamic)
+        }
+    });
+
+    return { poolResource, pool };
+};
+
+const formatPercentage = (value: number | undefined): string =>
+    value ? `${(value / 100).toFixed(2)}%` : 'N/A';
 
 interface TokenImageProps {
     logoUri: string | null;
@@ -98,7 +117,6 @@ const TokenImage = ({ logoUri, symbol, size = '6' }: TokenImageProps) => (
     )
 );
 
-// Token Pair Display Component
 interface TokenPairProps {
     tokens: TokenMetadata[];
 }
@@ -117,7 +135,6 @@ const TokenPair = ({ tokens }: TokenPairProps) => (
     </HStack>
 );
 
-// Animated Graph Component
 interface AnimatedGraphProps {
     riskFactor: number;
 }
@@ -156,30 +173,13 @@ interface Steps1Props extends StackProps {
     setStep?: (step: number) => void;
 }
 const Step1 = (props: Steps1Props) => {
-    const { control, watch, setValue } = useFormContext<FormInput>();
+    const { control, watch } = useFormContext<FormInput>();
     const { setStep } = props;
     const poolId = watch("poolId");
+    const { poolResource, pool } = usePoolData(poolId);
 
     const { data: pools, isLoading: isLoadingPools } = useHyperionGetPoolIds({
         options: {
-            staleTime: Infinity,
-        }
-    });
-
-    // Get pool resource to get tickSpacing with caching
-    const { data: poolResource } = useHyperionGetPoolResource({
-        payload: { id: poolId },
-        options: {
-            enabled: !!poolId,
-            staleTime: Infinity,
-        }
-    });
-
-    const { data: pool } = useHyperionGetPoolById({
-        payload: { id: poolId },
-        options: {
-            queryKey: ['hyperion', 'getPoolById', poolId],
-            enabled: !!poolId,
             staleTime: Infinity,
         }
     });
@@ -456,15 +456,7 @@ const Preview = (props: PreviewProps) => {
     const kinkUtilization = watch("kinkUtilization");
     const riskFactor = watch("riskFactor");
     const poolId = watch("poolId");
-
-    const { data: pool } = useHyperionGetPoolById({
-        payload: { id: poolId },
-        options: {
-            queryKey: ['hyperion', 'getPoolById', poolId],
-            enabled: !!poolId,
-            staleTime: Infinity,
-        }
-    });
+    const { pool } = usePoolData(poolId);
 
     const items = [
         { label: 'Slope Before Kink', value: formatPercentage(slopeBeforeKink) },
@@ -576,15 +568,7 @@ export const CreateLoanPositionForm = (props: Props) => {
     });
 
     const poolId = form.watch("poolId");
-
-    const { data: pool } = useHyperionGetPoolById({
-        payload: { id: poolId },
-        options: {
-            queryKey: ['hyperion', 'getPoolById', poolId],
-            enabled: !!poolId,
-            staleTime: Infinity,
-        }
-    });
+    const { pool } = usePoolData(poolId);
 
     const onSubmitHandler: SubmitHandler<FormInput> = async (data) => {
         if (!pool) return;
@@ -607,7 +591,7 @@ export const CreateLoanPositionForm = (props: Props) => {
         const convertedData: CreateLoanPositionPayload = {
             tokenA: pool.pool.token1,
             tokenB: pool.pool.token2,
-            tokenFee: pool.pool.token1, // Default to tokenA
+            tokenFee: pool.pool.token1,
             feeTier: pool.pool.feeTier,
             tickLower: tickLower < 0 ? U32_MAX + tickLower : tickLower,
             tickUpper: tickUpper < 0 ? U32_MAX + tickUpper : tickUpper,
@@ -620,7 +604,7 @@ export const CreateLoanPositionForm = (props: Props) => {
         await createLoanPosition(convertedData);
     };
 
-    const onErrorHandler: SubmitErrorHandler<FormInput> = (errors) => {
+    const onErrorHandler: SubmitErrorHandler<FormInput> = () => {
     };
 
     const handleManualSubmit = () => {

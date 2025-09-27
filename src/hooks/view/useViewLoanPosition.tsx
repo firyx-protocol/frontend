@@ -4,7 +4,7 @@ import { snakeToCamel } from "@/libs/helpers/convert";
 import { LedgerVersionArg, MoveResource, MoveValue } from "@aptos-labs/ts-sdk";
 
 export type GetAllPositionsResult = {
-  positions: MoveValue[];
+  positions: string[];
   totalActiveLoans: number;
   totalLiquidity: number;
 };

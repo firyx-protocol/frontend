@@ -12,6 +12,7 @@ export const DEFAULT_SLOPE_AFTER_KINK = 8000; // 80%
 export const DEFAULT_KINK_UTILIZATION = 8000; // 80%
 
 export const DEFAULT_TICK_SCALING_BFS = 500; // 5%
+export const DEFAULT_MIN_MAX_SCALING_BFS = 1000; // 10%
 
 export const U32_MAX = 2**32 - 1;
 export const U64_MAX = 2**64 - 1;
