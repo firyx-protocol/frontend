@@ -2,7 +2,6 @@
 
 import { Grid, GridItem, HStack, HtmlProps, Link, TagLabel, TagRoot } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { LinkButton } from "@/components/ui/link-button";
 import { Logo } from "@/components/brands/Logo";
 import { VERSION } from "@/constants";
 import { motion } from "framer-motion";
@@ -44,10 +43,12 @@ export const Header = (props: HeaderProps) => {
             top={0}
             zIndex={100}
             bg={"bg"}
-            initial={{ paddingTop: 16 }}
-            animate={{ padding }}
+            initial={{ paddingTop: padding }}
+            animate={{ paddingTop: padding }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             style={{
+                padding: 16,
+                paddingTop: 24,
                 transition: "background 0.3s, backdrop-filter 0.3s, box-shadow 0.3s, top 0.3s"
             }}
             {...props}
