@@ -60,13 +60,6 @@ export default async function middleware(request: NextRequest) {
         return; // Allow other routes on root domain (landing pages)
     }
 
-    // Redirect 'www' subdomain to root domain
-    if (subdomain === "www") {
-        const url = request.nextUrl.clone();
-        url.hostname = ROOT_DOMAIN;
-        return Response.redirect(url.toString(), 301);
-    }
-
     // Handle 'app' subdomain
     if (subdomain === "app") {
         // Rewrite to /app path instead of redirecting
