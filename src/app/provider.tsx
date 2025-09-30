@@ -5,6 +5,7 @@ import { PropsWithChildren } from "react";
 import { Network } from "@aptos-labs/ts-sdk";
 import { Provider as UIProvider } from "@/components/ui/provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { NETWORK } from "@/constants";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,7 +23,7 @@ const WalletProvider = ({ children }: PropsWithChildren) => {
     <AptosWalletAdapterProvider
       autoConnect={true}
       dappConfig={{
-        network: Network.MAINNET,
+        network: NETWORK,
         aptosApiKeys: {
           mainnet: process.env.APTOS_API_KEY_MAINNET,
         }

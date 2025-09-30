@@ -10,7 +10,7 @@ const nunito = Nunito({
 
 
 export const metadata: Metadata = {
-  title: "Firyx | Decentralized Lending on Aptos",
+  title: "Firyx | Decentralized Non Collateral Lending Protocol",
   description: "Decentralized non-collateral lending and borrowing platform on Aptos",
 };
 
