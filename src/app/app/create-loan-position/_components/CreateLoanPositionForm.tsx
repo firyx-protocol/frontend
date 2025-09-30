@@ -16,7 +16,7 @@ import {
     FieldLabel,
     FieldHelperText
 } from "@chakra-ui/react";
-import { ReactNode, useMemo, useState, useCallback } from "react";
+import { ReactNode, useMemo, useState, useCallback, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Controller, FormProvider, SubmitErrorHandler, SubmitHandler, useForm, useFormContext } from "react-hook-form";
 import { HiCheck } from "react-icons/hi2";
@@ -173,7 +173,7 @@ interface Steps1Props extends StackProps {
     setStep?: (step: number) => void;
 }
 const Step1 = (props: Steps1Props) => {
-    const { control, watch } = useFormContext<FormInput>();
+    const { control, watch, setValue } = useFormContext<FormInput>();
     const { setStep } = props;
     const poolId = watch("poolId");
     const { poolResource, pool } = usePoolData(poolId);
@@ -224,6 +224,14 @@ const Step1 = (props: Steps1Props) => {
 
         return currentPrice * (1 + (DEFAULT_TICK_SCALING_BFS / BPS));
     }, [currentPrice]);
+
+    // Reset price values when pool changes
+    useEffect(() => {
+        if (poolId && defaultMinPrice && defaultMaxPrice) {
+            setValue("minPrice", defaultMinPrice);
+            setValue("maxPrice", defaultMaxPrice);
+        }
+    }, [poolId, defaultMinPrice, defaultMaxPrice, setValue]);
 
     const handlePriceBlur = useCallback((priceValue: string, fieldOnChange: (value: number | string) => void) => {
         if (priceValue === "∞" || priceValue === "" || parseFloat(priceValue) === 0) {
@@ -585,6 +593,8 @@ export const CreateLoanPositionForm = (props: Props) => {
             feeTierIndex: pool.pool.feeTier,
             decimalsRatio,
         })?.toNumber();
+        
+        const offset = U32_MAX + 1;
 
         if (tickLower === undefined || tickUpper === undefined) throw new Error("Invalid tick range");
 
@@ -593,8 +603,8 @@ export const CreateLoanPositionForm = (props: Props) => {
             tokenB: pool.pool.token2,
             tokenFee: pool.pool.token1,
             feeTier: pool.pool.feeTier,
-            tickLower: tickLower < 0 ? U32_MAX + tickLower : tickLower,
-            tickUpper: tickUpper < 0 ? U32_MAX + tickUpper : tickUpper,
+            tickLower: tickLower < 0 ? offset + tickLower : tickLower,
+            tickUpper: tickUpper < 0 ? offset + tickUpper : tickUpper,
             slopeBeforeKink: data.slopeBeforeKink,
             slopeAfterKink: data.slopeAfterKink,
             kinkUtilization: data.kinkUtilization,

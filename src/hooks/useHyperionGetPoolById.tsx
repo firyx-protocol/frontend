@@ -58,7 +58,6 @@ export const useHyperionGetPoolById: UseQueryHook<UseHyperionGetPoolByIdPayload,
             throw new Error("No pool found");
         }
 
-        console.log('pools', pools);
         return pools[0];
     }
 

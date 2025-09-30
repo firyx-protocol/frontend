@@ -3,12 +3,7 @@ import { aptos } from "@/utils/aptos";
 import { snakeToCamel } from "@/libs/helpers/convert";
 import { MoveResource, PaginationArgs } from "@aptos-labs/ts-sdk";
 
-export interface GetLoanSlotsResult {
-  decodedKey: string;
-  decodedValue?: string[];
-  key: string;
-  transactionVersion: string;
-}
+export type GetLoanSlotsResult = string[];
 
 export interface UseViewLoanSlot {
   principal: (loanSlotAddress: string) => Promise<string>;
@@ -28,7 +23,12 @@ export interface UseViewLoanSlot {
   getLoanSlots: (options?: {
     options?: PaginationArgs | undefined;
     accountAddress?: string;
-  }) => Promise<GetLoanSlotsResult[] | undefined>;
+  }) => Promise<GetLoanSlotsResult>;
+  // (yield_amount, total_fee_a, total_fee_b, reward_assets_count)
+  calculatePendingYield: (
+    loanPositionAddress: string,
+    loanSlotAddress: string
+  ) => Promise<{ yieldAmount: string, totalFeeA: string, totalFeeB: string, rewardAssetsCount: string }>;
 }
 
 interface LoanSlotInfo {
@@ -206,31 +206,49 @@ export const useViewLoanSlot = (): UseViewLoanSlot => {
   const getLoanSlots = async (options?: {
     options?: PaginationArgs | undefined;
     accountAddress?: string;
-  }): Promise<GetLoanSlotsResult[]> => {
+  }): Promise<GetLoanSlotsResult> => {
     const resources = await aptos.getAccountResource({
       accountAddress: CONTRACT_ADDRESS,
       resourceType: `${CONTRACT_ADDRESS}::loan_slot::LoanSlotRegistry`,
     });
     const convertedResources = snakeToCamel(resources) as MoveResource;
-
     type LoanSlotRegistryData = {
       ownerSlots?: { handle: string };
     };
     const data = convertedResources as LoanSlotRegistryData;
-    const allPositions = await aptos.getTableItemsData({
-      options: {
-        where: {
-          table_handle: { _eq: String(data?.ownerSlots?.handle) },
-          ...(options?.accountAddress
-            ? { key: { _eq: options.accountAddress } }
-            : {}),
-        },
-        ...options?.options,
+    
+    const allPositions = await aptos.getTableItem({
+      data: {
+        key: options?.accountAddress,
+        key_type: "address",
+        value_type: "vector<address>",
+      },
+      handle: data.ownerSlots!.handle,
+    })
+
+    return allPositions as GetLoanSlotsResult;
+  };
+
+
+  const calculatePendingYield = async (
+    loanPositionAddress: string,
+    loanSlotAddress: string
+  ): Promise<{ yieldAmount: string, totalFeeA: string, totalFeeB: string, rewardAssetsCount: string }> => {
+    if (!loanPositionAddress) {
+      throw new Error("Loan position address is required");
+    }
+    if (!loanSlotAddress) {
+      throw new Error("Deposit slot address is required");
+    }
+
+    const [yieldAmount, totalFeeA, totalFeeB, rewardAssetsCount] = await aptos.view({
+      payload: {
+        function: `${CONTRACT_ADDRESS}::loan_position::calculate_loan_slot_yield`,
+        functionArguments: [loanPositionAddress, loanSlotAddress],
       },
     });
-    const convertedAllPositions = snakeToCamel(allPositions);
-    console.log("All Positions Data:", convertedAllPositions);
-    return convertedAllPositions as GetLoanSlotsResult[];
+
+    return { yieldAmount: String(yieldAmount), totalFeeA: String(totalFeeA), totalFeeB: String(totalFeeB), rewardAssetsCount: String(rewardAssetsCount) };
   };
 
   return {
@@ -246,6 +264,7 @@ export const useViewLoanSlot = (): UseViewLoanSlot => {
     getLoanSlotInfo,
     getView,
     getLoanSlots,
+    calculatePendingYield,
   };
 };
 

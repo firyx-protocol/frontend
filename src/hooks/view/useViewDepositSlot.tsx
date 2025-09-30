@@ -3,12 +3,7 @@ import { MoveResource, MoveValue, PaginationArgs } from "@aptos-labs/ts-sdk";
 import { aptos } from "@/utils/aptos";
 import { snakeToCamel } from "@/libs/helpers/convert";
 
-export interface GetDepositSlotsResult {
-  decodedKey: string;
-  decodedValue?: string[];
-  key: string;
-  transactionVersion: string;
-}
+export type GetDepositSlotsResult = string[];
 
 export interface UseViewDepositSlot {
   originalPrincipal: (depositSlotAddress: string) => Promise<string>;
@@ -29,7 +24,11 @@ export interface UseViewDepositSlot {
   getDepositSlots: (options?: {
     options?: PaginationArgs | undefined;
     accountAddress?: string;
-  }) => Promise<GetDepositSlotsResult[] | undefined>;
+  }) => Promise<GetDepositSlotsResult>;
+  // (yield_amount, total_fee_a, total_fee_b, reward_assets_count)
+  calculatePendingYield: (
+    loanPositionAddress: string,
+    depositSlotAddress: string) => Promise<{ yieldAmount: string, totalFeeA: string, totalFeeB: string, rewardAssetsCount: string }>;
 }
 
 export const useViewDepositSlot = (): UseViewDepositSlot => {
@@ -229,30 +228,26 @@ export const useViewDepositSlot = (): UseViewDepositSlot => {
   const getDepositSlots = async (options?: {
     options?: PaginationArgs | undefined;
     accountAddress?: string;
-  }): Promise<GetDepositSlotsResult[]> => {
+  }): Promise<GetDepositSlotsResult> => {
     const resources = await aptos.getAccountResource({
       accountAddress: CONTRACT_ADDRESS,
       resourceType: `${CONTRACT_ADDRESS}::deposit_slot::DepositSlotRegistry`,
     });
     const convertedResources = snakeToCamel(resources) as MoveResource;
-
     type DepositSlotRegistryData = {
       ownerSlots?: { handle: string };
     };
     const data = convertedResources as DepositSlotRegistryData;
-    const allPositions = await aptos.getTableItemsData({
-      options: {
-        where: {
-          table_handle: { _eq: String(data?.ownerSlots?.handle) },
-          ...(options?.accountAddress
-            ? { key: { _eq: options.accountAddress } }
-            : {}),
-        },
-        ...options?.options,
+    const allPositions = await aptos.getTableItem({
+      data: {
+        key: options?.accountAddress,
+        key_type: "address",
+        value_type: "vector<address>",
       },
-    });
-    const convertedAllPositions = snakeToCamel(allPositions);
-    return convertedAllPositions as GetDepositSlotsResult[];
+      handle: data.ownerSlots!.handle,
+    })
+
+    return allPositions as GetDepositSlotsResult;
   };
 
   const getView = async (
@@ -266,6 +261,27 @@ export const useViewDepositSlot = (): UseViewDepositSlot => {
     });
     const convertedResources = snakeToCamel(resources) as MoveResource[];
     return convertedResources;
+  };
+
+  const calculatePendingYield = async (
+    loanPositionAddress: string,
+    depositSlotAddress: string
+  ): Promise<{ yieldAmount: string, totalFeeA: string, totalFeeB: string, rewardAssetsCount: string }> => {
+    if (!loanPositionAddress) {
+      throw new Error("Loan position address is required");
+    }
+    if (!depositSlotAddress) {
+      throw new Error("Deposit slot address is required");
+    }
+
+    const [yieldAmount, totalFeeA, totalFeeB, rewardAssetsCount] = await aptos.view({
+      payload: {
+        function: `${CONTRACT_ADDRESS}::loan_position::calculate_deposit_slot_yield`,
+        functionArguments: [loanPositionAddress, depositSlotAddress],
+      },
+    });
+
+    return { yieldAmount: String(yieldAmount), totalFeeA: String(totalFeeA), totalFeeB: String(totalFeeB), rewardAssetsCount: String(rewardAssetsCount) };  
   };
 
   return {
@@ -285,5 +301,6 @@ export const useViewDepositSlot = (): UseViewDepositSlot => {
     totalDeposits,
     getView,
     getDepositSlots,
+    calculatePendingYield
   };
 };

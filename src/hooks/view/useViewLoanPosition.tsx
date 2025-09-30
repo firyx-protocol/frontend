@@ -43,6 +43,12 @@ export interface UseViewLoanPosition {
    * @returns A list of all loan positions.
    */
   getAllPositions: () => Promise<GetAllPositionsResult>;
+
+  /**
+   * Calculate the reserve for a given loan position address, amount, and duration index.
+   * @returns 
+   */
+  calculateReserve: (loanPosAddress: string, amount: string, durationIdx: number) => Promise<string>;
 }
 
 /**
@@ -121,11 +127,32 @@ export const useViewLoanPosition = (): UseViewLoanPosition => {
     return convertedPositions;
   };
 
+  const calculateReserve = async (loanPosAddress: string, amount: string, durationIdx: number): Promise<string> => {
+    if (!loanPosAddress) {
+      throw new Error("Loan position address is required");
+    }
+    if (!amount) {
+      throw new Error("Amount is required");
+    }
+    if (durationIdx === undefined || durationIdx === null) {
+      throw new Error("Duration index is required");
+    }
+    const [reserve] = await aptos.view({
+      payload: {
+        function: `${CONTRACT_ADDRESS}::loan_position::calculate_reserve`,
+        functionArguments: [loanPosAddress, amount, durationIdx.toString()],
+      },
+    });
+    
+    return reserve as string;
+  };
+
   return {
     getFeeGrowthGlobal,
     getPositionInfo,
     lendingPosition,
     getView,
     getAllPositions,
+    calculateReserve,
   };
 };

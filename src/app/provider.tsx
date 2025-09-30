@@ -6,7 +6,15 @@ import { Network } from "@aptos-labs/ts-sdk";
 import { Provider as UIProvider } from "@/components/ui/provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      refetchOnWindowFocus: false,
+      staleTime: Infinity,
+    }
+  }
+});
 
 const WalletProvider = ({ children }: PropsWithChildren) => {
 

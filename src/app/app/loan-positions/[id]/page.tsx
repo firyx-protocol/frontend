@@ -1,4 +1,4 @@
-import { HStack } from "@chakra-ui/react"
+import { HStack, Stack } from "@chakra-ui/react"
 import { DataArea } from "./_components/DataArea"
 import { ActionArea } from "./_components/ActionArea"
 
@@ -9,9 +9,12 @@ export default async function Page({
 }) {
   const { id } = await params
   return (
-    <HStack width={"full"} height={"full"} gap={"6"} align={"start"} overflow={"auto"}>
+    <Stack
+      flexDirection={["column", "column", "row"]}
+      width={"full"} height={"full"} gap={"6"} align={"start"} overflow={"auto"}
+    >
       <DataArea flex={4} id={id} />
       <ActionArea flex={3} id={id} />
-    </HStack>
+    </Stack>
   )
 }

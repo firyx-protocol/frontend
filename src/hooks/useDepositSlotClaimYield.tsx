@@ -50,7 +50,10 @@ export const useDepositSlotClaimYield: UseMutationHook<
     const transaction: InputTransactionData = {
       data: {
         function: `${CONTRACT_ADDRESS}::loan_position::deposit_slot_claim_yield`,
-        functionArguments: Object.values(payload),
+        functionArguments: [
+          payload.positionAddress,
+          payload.depositSlotAddress,
+        ]
       },
     };
 

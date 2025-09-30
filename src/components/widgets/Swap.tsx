@@ -91,7 +91,7 @@ export const SwapWidget = ({
     };
 
     return (
-        <VStack gap="2" p="6" w="full">
+        <VStack gap="2" w="full">
             <VStack w="full" align="center" gap="1" pos={"relative"}>
                 <Box w="full" p="5" bg="bg.panel" borderRadius="3xl" shadow={"sm"}>
                     <Text fontSize="sm" color="fg">

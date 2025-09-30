@@ -1,22 +1,28 @@
 "use client";
 
+import { DataListItem, DataListRoot } from "@/components/ui/data-list";
 import { toaster } from "@/components/ui/toaster";
+import { BorrowShare } from "@/components/widgets/BorrowShare";
 import { SwapWidget } from "@/components/widgets/Swap";
 import { BPS, DEFAULT_MIN_MAX_SCALING_BFS } from "@/constants";
+import { useBorrowLiquidity } from "@/hooks/useBorrowLiquidity";
 import { useDepositLiquidity } from "@/hooks/useDepositLiquidity";
+import { useGetFungibleToken } from "@/hooks/useGetFungibleToken";
 import { useGetFungibleTokenBalance } from "@/hooks/useGetFungibleTokenBalance";
 import { useGetFungibleTokenBalances } from "@/hooks/useGetFungibleTokenBalances";
 import { useGetLoanPositionById } from "@/hooks/useGetLoanPositionResource";
 import { GetPoolByIdResponse, useHyperionGetPoolById } from "@/hooks/useHyperionGetPoolById";
 import { GetPoolByTokenPairAndFeeTierResponse, useHyperionGetPoolInfo } from "@/hooks/useHyperionGetPoolInfo";
 import { useHyperionGetPositionResource } from "@/hooks/useHyperionGetPositionResource";
+import { useViewLoanPosition } from "@/hooks/view/useViewLoanPosition";
 import { LoanPosition, TokenMetadata } from "@/types/core";
 import { hyperion } from "@/utils/hyperion";
 import { MoveVector } from "@aptos-labs/ts-sdk";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { StackProps, VStack } from "@chakra-ui/react";
+import { ButtonProps, StackProps, TabsContent, TabsList, TabsRoot, TabsTrigger, VStack } from "@chakra-ui/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import BigNumber from "bignumber.js";
+import numeral from "numeral";
 import { useEffect, useMemo, useState } from "react";
 
 interface Props extends StackProps {
@@ -25,8 +31,6 @@ interface Props extends StackProps {
 
 export const ActionArea = (props: Props) => {
     const { id } = props;
-
-    const { account } = useWallet();
 
     const { data: loanPosition } = useGetLoanPositionById({
         payload: {
@@ -81,32 +85,51 @@ export const ActionArea = (props: Props) => {
 
     return (
         <VStack
+            w={"full"}
             flex={1}
             {...props}
         >
-            <BorrowSwapWidget
-                loanPositionId={id}
-                loanPosition={loanPosition}
-                pool={pool}
-                poolInfo={poolInfo}
-            />
+            <TabsRoot w={"full"} defaultValue="deposit">
+                <TabsList>
+                    <TabsTrigger value="deposit">
+                        Deposit
+                    </TabsTrigger>
+                    <TabsTrigger value="borrow">
+                        Borrow
+                    </TabsTrigger>
+                </TabsList>
+                <TabsContent value="deposit">
+                    <DepositWidget
+                        loanPositionId={id}
+                        loanPosition={loanPosition}
+                        pool={pool}
+                        poolInfo={poolInfo}
+                    />
+                </TabsContent>
+                <TabsContent value="borrow">
+                    <BorrowShareWidget
+                        id={id}
+                        loanPos={loanPosition}
+                    />
+                </TabsContent>
+            </TabsRoot>
         </VStack>
     );
 }
 
-interface BorrowSwapWidgetProps extends Omit<StackProps, 'children'> {
+interface DepositWidgetProps extends Omit<StackProps, 'children'> {
     loanPositionId: string;
     loanPosition: LoanPosition;
     pool: GetPoolByIdResponse;
     poolInfo: GetPoolByTokenPairAndFeeTierResponse;
 }
-export const BorrowSwapWidget = ({
+export const DepositWidget = ({
     loanPositionId,
     loanPosition,
     pool,
     poolInfo,
     ...props
-}: BorrowSwapWidgetProps) => {
+}: DepositWidgetProps) => {
     const { account } = useWallet();
     const queryClient = useQueryClient();
 
@@ -162,9 +185,8 @@ export const BorrowSwapWidget = ({
         queryKey: ['hyperion', 'getSwapQuote', pool.id, rawAmountA],
         queryFn: async () => {
             if (!pool || !rawAmountA) return;
-
             // Use raw amount directly (already in 10^8 format)
-            const amount = await hyperion.Pool.estCurrencyBAmountFromA({
+            console.log({
                 currencyA: pool.pool.token1,
                 currencyB: pool.pool.token2,
                 currencyAAmount: rawAmountA,
@@ -172,6 +194,16 @@ export const BorrowSwapWidget = ({
                 feeTierIndex: pool.pool.feeTier,
                 tickLower: loanPosition.parameters.tickLower,
                 tickUpper: loanPosition.parameters.tickUpper,
+            })
+
+            const amount = await hyperion.Pool.estCurrencyBAmountFromA({
+                tickLower: loanPosition.parameters.tickLower,
+                tickUpper: loanPosition.parameters.tickUpper,
+                currentPriceTick: Number(pool.pool.currentTick),
+                currencyA: pool.pool.token1,
+                currencyB: pool.pool.token2,
+                feeTierIndex: pool.pool.feeTier,
+                currencyAAmount: rawAmountA,
             });
 
             return amount;
@@ -260,5 +292,114 @@ export const BorrowSwapWidget = ({
             actionButtonText="Deposit"
             onAction={handleDeposit}
         />
+    )
+}
+
+const calculateAmount = (share: string, total: string) => {
+    return BigNumber(share)
+        .times(total)
+        .dividedToIntegerBy(100)
+};
+
+interface BorrowShareProps {
+    id: string;
+    loanPos: LoanPosition;
+}
+
+export const BorrowShareWidget = (props: BorrowShareProps) => {
+    const { id, loanPos } = props;
+    const queryClient = useQueryClient();
+
+    const [share, setShare] = useState<string>("25");
+    const [durationIdx, setDurationIdx] = useState<number>(0);
+
+    const { mutate: borrowLiquidity, isPending: isPendingBorrow } = useBorrowLiquidity({
+        options: {
+            onSuccess: () => {
+                setShare("25");
+                setDurationIdx(0);
+
+                queryClient.invalidateQueries();
+                
+                toaster.success({
+                    title: "Success",
+                    description: "Liquidity borrowed successfully",
+                });
+            },
+            onError: (error) => {
+                toaster.error({
+                    title: "Error",
+                    description: error.message,
+                })
+            }
+        }
+    });
+    const { calculateReserve } = useViewLoanPosition();
+
+    const { data: reserve, isLoading: isLoadingReserve } = useQuery({
+        queryKey: ['calculate-reserve', share, durationIdx, id, loanPos],
+        queryFn: async () => {
+            const reserve = await calculateReserve(
+                id,
+                calculateAmount(share, loanPos.liquidity).toString(),
+                durationIdx
+            );
+
+            return reserve;
+        },
+        enabled: !!share,
+        refetchOnWindowFocus: false,
+    });
+
+    const { data: tokenFeeInfo } = useGetFungibleToken({
+        payload: {
+            asset_type: loanPos.parameters.tokenFee.inner,
+        }
+    });
+
+    const metadataItems = useMemo(() => ([
+        {
+            label: "Reserve Amount",
+            value: `${numeral(BigNumber(reserve || "0").dividedBy(BigNumber(10).pow(tokenFeeInfo?.decimals || 8)).toNumber()).format(`0,0.0000`)} ${tokenFeeInfo?.symbol?.toUpperCase()}`,
+        },
+    ]), [reserve, tokenFeeInfo]);
+
+    const handleAction = () => {
+        borrowLiquidity({
+            positionAddress: id,
+            amount: calculateAmount(share, loanPos.liquidity).toNumber(),
+            durationIndex: durationIdx,
+            tokenFee: loanPos.parameters.tokenFee.inner,
+        })
+    };
+    return (
+        <VStack h={"full"}>
+            <BorrowShare
+                amount={Number(share) >= 100 ? "99" : share}
+                maxAmount={(
+                    Number(loanPos.availableBorrow) / Number(loanPos.liquidity) * 100
+                ).toFixed(2)}
+                selectedDurationIdx={durationIdx}
+                onAmountChange={setShare}
+                onDurationChange={setDurationIdx}
+                onAction={handleAction}
+                buttonProps={{
+                    loading: isLoadingReserve || isPendingBorrow,
+                    loadingText: isPendingBorrow ? "Processing..." : "Calculating...",
+                    disabled: !share || isLoadingReserve,
+                }}
+            />
+            <DataListRoot w={"full"} orientation={"horizontal"}>
+                {metadataItems.map((item, index) => (
+                    <DataListItem
+                        key={index}
+                        label={item.label}
+                        value={item.value}
+                        info={"This is some additional info about the item."}
+                        justifyContent={"space-between"}
+                    />
+                ))}
+            </DataListRoot>
+        </VStack>
     )
 }

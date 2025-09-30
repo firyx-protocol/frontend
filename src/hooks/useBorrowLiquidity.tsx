@@ -54,7 +54,12 @@ export const useBorrowLiquidity: UseMutationHook<
     const transaction: InputTransactionData = {
       data: {
         function: `${CONTRACT_ADDRESS}::loan_position::borrow_liquidity`,
-        functionArguments: Object.values(payload),
+        functionArguments: [
+          payload.positionAddress,
+          payload.tokenFee,
+          payload.amount.toString(),
+          payload.durationIndex.toString(),
+        ],
       },
     };
     const response = await signAndSubmitTransaction(transaction);

@@ -13,7 +13,6 @@ import {
 export type LoanSlotClaimYieldAndRepayPayload = {
   positionAddress: string;
   loanSlotAddress: string;
-  amount: number;
 };
 
 export type LoanSlotClaimYieldAndRepayResult = {
@@ -63,7 +62,10 @@ export const useLoanSlotClaimYieldAndRepay: UseMutationHook<
     const transaction: InputTransactionData = {
       data: {
         function: `${CONTRACT_ADDRESS}::loan_position::loan_slot_claim_yield_and_repay`,
-        functionArguments: Object.values(payload),
+        functionArguments: [
+          payload.positionAddress,
+          payload.loanSlotAddress,
+        ],
       },
     };
     const response = await signAndSubmitTransaction(transaction);

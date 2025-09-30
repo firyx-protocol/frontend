@@ -7,7 +7,7 @@ export const APTOS_EXPLORER_URL = `https://explorer.aptoslabs.com`;
 export const APTOS_GRAPHQL_ENDPOINT = NETWORK === Network.MAINNET
     ? "https://api.mainnet.aptoslabs.com/v1/graphql"
     : "https://api.testnet.aptoslabs.com/v1/graphql";
-export const HYPERION_API_KEY = process.env.NEXT_PUBLIC_HYPERION_API_KEY || "";
+export const HYPERION_API_KEY = process.env.NEXT_PUBLIC_APTOS_API_KEY || "";
 
 export * from "./core";
 export * from "./contract";
