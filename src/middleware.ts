@@ -31,7 +31,7 @@ function extractSubdomain(request: NextRequest): string | null {
         return "app";
     }
 
-    if (hostname === rootDomainFormatted) {
+    if (hostname === rootDomainFormatted || hostname === `www.${rootDomainFormatted}`) {
         return null; // No subdomain, just the root domain
     }
 
