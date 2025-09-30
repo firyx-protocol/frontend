@@ -7,9 +7,9 @@ export default async function Layout({
     children: React.ReactNode
 }) {
     return (
-        <VStack height={"100vh"} width={"100vw"} gap={"6"} p={"4"}>
+        <VStack height={"100vh"} width={"100vw"} gap={"6"} p={"4"} overflow={"auto"}>
             <Header />
-            <Container maxW={"6xl"} height={"full"} width={"full"}>
+            <Container maxW={"6xl"} height={"full"} width={"full"} overflow={"auto"}>
                 {children}
             </Container>
         </VStack>

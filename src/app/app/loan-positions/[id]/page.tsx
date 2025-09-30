@@ -1,4 +1,4 @@
-import { HStack, Stack } from "@chakra-ui/react"
+import { Stack } from "@chakra-ui/react"
 import { DataArea } from "./_components/DataArea"
 import { ActionArea } from "./_components/ActionArea"
 

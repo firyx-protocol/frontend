@@ -156,7 +156,7 @@ export const DepositSlotCard = ({
                             size={"xs"}
                             loading={isPendingClaim}
                             loadingText={"Claiming"}
-                            disabled={isPendingClaim || BigNumber(data?.totalFeeA || "0").isZero() && BigNumber(data?.totalFeeB || "0").isZero()}
+                            disabled={isPendingClaim}
                             onClick={() => claim({
                                 depositSlotAddress: id,
                                 positionAddress: loanPos.id
@@ -171,10 +171,10 @@ export const DepositSlotCard = ({
                         >
                             <HStack>
                                 <Text fontSize={"sm"} fontWeight={"bold"} color={"fg"}>
-                                    {isCalculatingYield ? "..." : BigNumber(data?.totalFeeA || "0").dividedBy(BigNumber(10 ** pool.pool.token1Info.decimals)).decimalPlaces(2).toString()} {pool?.pool.token1Info.symbol || "A"}
+                                    {isCalculatingYield ? "..." : BigNumber(data?.totalFeeA || "0").dividedBy(BigNumber(10 ** pool.pool.token1Info.decimals)).decimalPlaces(4).toString()} {pool?.pool.token1Info.symbol || "A"}
                                 </Text>
                                 <Text fontSize={"sm"} fontWeight={"bold"} color={"fg"}>
-                                    {isCalculatingYield ? "..." : BigNumber(data?.totalFeeB || "0").dividedBy(BigNumber(10 ** pool.pool.token2Info.decimals)).decimalPlaces(2).toString()} {pool?.pool.token2Info.symbol || "B"}
+                                    {isCalculatingYield ? "..." : BigNumber(data?.totalFeeB || "0").dividedBy(BigNumber(10 ** pool.pool.token2Info.decimals)).decimalPlaces(4).toString()} {pool?.pool.token2Info.symbol || "B"}
                                 </Text>
                             </HStack>
                         </Field>

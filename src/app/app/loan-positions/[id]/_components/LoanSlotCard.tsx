@@ -1,6 +1,6 @@
 import { Field } from "@/components/ui/field";
 import { toaster } from "@/components/ui/toaster";
-import { APTOS_EXPLORER_URL, DURATION_YEAR_VECTOR_BPS } from "@/constants";
+import { APTOS_EXPLORER_URL, BPS, DURATION_YEAR_VECTOR_BPS } from "@/constants";
 import { useGetLoanSlotById } from "@/hooks/useGetLoanSlotResource";
 import { useHyperionGetPoolById } from "@/hooks/useHyperionGetPoolById";
 import { useHyperionGetPoolInfo } from "@/hooks/useHyperionGetPoolInfo";
@@ -150,13 +150,14 @@ export const LoanSlotCard = ({
                             href={`${APTOS_EXPLORER_URL}/account/${id}`}
                             variant={"plain"}
                             fontWeight={"medium"}
+                            target="_blank"
                         >
                             {shortenAddress(id)}
                         </Link>
                         <HStack w={"fit"}>
                             <Icon color={"fg.subtle"} as={BiCalendar} />
                             <Text w={"fit"} fontSize={"sm"} fontWeight={"bold"} color={"fg"}>
-                                {numeral(DURATION_YEAR_VECTOR_BPS[loanSlot.durationIdx] / 100).format("0.[00]")} years
+                                {numeral(DURATION_YEAR_VECTOR_BPS[loanSlot.durationIdx] / BPS).format("0.[00]")} years
                             </Text>
                         </HStack>
                     </HStack>
@@ -194,10 +195,10 @@ export const LoanSlotCard = ({
                         >
                             <HStack>
                                 <Text fontSize={"sm"} fontWeight={"bold"} color={"fg"}>
-                                    {isCalculatingYield ? "..." : BigNumber(data?.totalFeeA || "0").dividedBy(BigNumber(10 ** pool.pool.token1Info.decimals)).decimalPlaces(2).toString()} {pool?.pool.token1Info.symbol || "A"}
+                                    {isCalculatingYield ? "..." : BigNumber(data?.totalFeeA || "0").dividedBy(BigNumber(10 ** pool.pool.token1Info.decimals)).decimalPlaces(4).toString()} {pool?.pool.token1Info.symbol || "A"}
                                 </Text>
                                 <Text fontSize={"sm"} fontWeight={"bold"} color={"fg"}>
-                                    {isCalculatingYield ? "..." : BigNumber(data?.totalFeeB || "0").dividedBy(BigNumber(10 ** pool.pool.token2Info.decimals)).decimalPlaces(2).toString()} {pool?.pool.token2Info.symbol || "B"}
+                                    {isCalculatingYield ? "..." : BigNumber(data?.totalFeeB || "0").dividedBy(BigNumber(10 ** pool.pool.token2Info.decimals)).decimalPlaces(4).toString()} {pool?.pool.token2Info.symbol || "B"}
                                 </Text>
                             </HStack>
                         </Field>
