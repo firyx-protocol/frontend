@@ -14,7 +14,8 @@ import {
     Image,
     FieldRoot,
     FieldLabel,
-    FieldHelperText
+    FieldHelperText,
+    Link
 } from "@chakra-ui/react";
 import { ReactNode, useMemo, useState, useCallback, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -38,6 +39,9 @@ import { useHyperionGetPoolResource } from "@/hooks/useHyperionGetPoolResource";
 import { roundTickBySpacing, priceToTick, tickToPrice } from "@hyperionxyz/sdk";
 import { sqrtPriceX64ToPrice } from "@/libs/helpers/math";
 import { NumberInputField, NumberInputRoot } from "@/components/ui/number-input";
+import { PairTokensIcon } from "@/components/utils/pair-tokens-icon";
+import numeral from "numeral";
+import { NETWORK } from "@/constants";
 
 const RISK_FACTOR_GRAPHS = [
     '/assets/ConservativeGraph.svg',
@@ -190,6 +194,7 @@ const Step1 = (props: Steps1Props) => {
             items: pools?.map((pool) => ({
                 label: shortenAddress(pool.id),
                 value: pool.id,
+                pool
             })) || [],
             itemToString: (item) => item?.label || '',
         })
@@ -244,8 +249,7 @@ const Step1 = (props: Steps1Props) => {
         }
 
         const decimalsRatio = Math.pow(10, (tokenAInfo?.decimals || 8) - (tokenBInfo?.decimals || 8));
-        console.log("decimalsRatio", decimalsRatio);
-        console.log("priceValue", priceValue);
+
         const tick = priceToTick({
             price: parseFloat(priceValue),
             feeTierIndex: pool.pool.feeTier,
@@ -278,17 +282,53 @@ const Step1 = (props: Steps1Props) => {
                                 collection={poolCollection}
                             >
                                 <SelectTrigger cursor={"pointer"}>
-                                    <SelectValueText placeholder={
-                                        isLoadingPools ? "Loading pools..." : "Choose pool id"
-                                    } />
+                                    <SelectValueText
+                                        placeholder={
+                                            isLoadingPools ? "Loading pools..." : "Choose pool id"
+                                        }
+                                    />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {poolCollection.items.map((item) => (
                                         <SelectItem
+                                            rounded={"2xl"}
                                             key={item.value}
                                             item={item}
                                         >
-                                            {item.label}
+                                            <HStack w={"full"} gap={"4"} justify={'space-between'}>
+                                                <HStack>
+                                                    <PairTokensIcon
+                                                        tokenASymbol={item.pool?.pool.token1Info.symbol || '-'}
+                                                        tokenAUri={item.pool?.pool.token1Info.logoUrl || undefined}
+                                                        tokenBSymbol={item.pool?.pool.token2Info.symbol || '-'}
+                                                        tokenBUri={item.pool?.pool.token2Info.logoUrl || undefined}
+                                                    />
+                                                    <Text fontSize={"sm"} fontWeight={"bold"} color={"fg"}>
+                                                        {item.pool.pool.token1Info.symbol || '-'} / {item.pool.pool.token2Info.symbol || '-'}
+                                                    </Text>
+                                                </HStack>
+                                                <Tooltip
+                                                    content={"TVL"}
+                                                    positioning={{
+                                                        placement: "right"
+                                                    }}
+                                                >
+                                                    <Text fontSize={"sm"} fontWeight={"bold"} color={"fg.subtle"}>
+                                                        {numeral(item.pool.tvlUSD).format("$0,0.[00]")}
+                                                    </Text>
+                                                </Tooltip>
+                                                <Link
+                                                    fontSize={"md"}
+                                                    color={"fg.subtle"}
+                                                    href={`https://explorer.aptoslabs.com/fungible_asset/${item.value}?network=${NETWORK}`}
+                                                    target={"_blank"}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    transition={"all 0.3s ease-in-out"}
+                                                    _hover={{ color: "fg", textDecor: "none" }}
+                                                >
+                                                    {shortenAddress(item.value)}
+                                                </Link>
+                                            </HStack>
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -593,7 +633,7 @@ export const CreateLoanPositionForm = (props: Props) => {
             feeTierIndex: pool.pool.feeTier,
             decimalsRatio,
         })?.toNumber();
-        
+
         const offset = U32_MAX + 1;
 
         if (tickLower === undefined || tickUpper === undefined) throw new Error("Invalid tick range");

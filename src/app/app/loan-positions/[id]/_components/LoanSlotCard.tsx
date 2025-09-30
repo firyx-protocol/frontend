@@ -78,7 +78,6 @@ export const LoanSlotCard = ({
         options: {
             queryKey: ['hyperion', 'getPositionResource', loanPos?.posObject.inner],
             enabled: !!loanPos,
-            refetchOnWindowFocus: false,
         }
     });
 

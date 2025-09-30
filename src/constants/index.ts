@@ -1,6 +1,7 @@
 import { Network } from "@aptos-labs/ts-sdk";
 
 export const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "";
+export const VERSION = process.env.NEXT_PUBLIC_VERSION || "0.0.1";
 
 export const NETWORK: Network = process.env.NEXT_PUBLIC_NETWORK as Network || Network.MAINNET;
 export const APTOS_EXPLORER_URL = `https://explorer.aptoslabs.com`;

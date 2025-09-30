@@ -77,7 +77,6 @@ export const LoanPositionTable = (props: Props) => {
             return await getAllPositions();
         },
         staleTime: 60 * 1000, // 1 minute
-        refetchOnWindowFocus: false,
     });
 
     return (
@@ -143,7 +142,7 @@ const PoolCell = (props: PoolRowProps) => {
         options: {
             queryKey: ['hyperion', 'getPositionResource', posObject.inner],
             enabled: !!posObject.inner,
-            refetchOnWindowFocus: false,
+
             staleTime: Infinity,
         }
     });
@@ -157,7 +156,7 @@ const PoolCell = (props: PoolRowProps) => {
         options: {
             queryKey: ['hyperion', 'getPoolInfo', position?.tokenA.inner, position?.tokenB.inner, position?.feeTier],
             enabled: !!position,
-            refetchOnWindowFocus: false,
+
             staleTime: Infinity,
         }
     });
@@ -168,7 +167,7 @@ const PoolCell = (props: PoolRowProps) => {
         }, options: {
             queryKey: ['hyperion', 'getPoolById', poolInfo?.poolId],
             enabled: !!poolInfo,
-            refetchOnWindowFocus: false,
+
             staleTime: Infinity,
         }
     });
@@ -207,7 +206,7 @@ const CustomTableRow = (props: CustomTableRowProps) => {
         options: {
             queryKey: ['loan-position-by-id', loanPositionId],
             enabled: !!loanPositionId,
-            refetchOnWindowFocus: false,
+
         }
     });
 
@@ -218,7 +217,7 @@ const CustomTableRow = (props: CustomTableRowProps) => {
         options: {
             queryKey: ['hyperion', 'getPositionResource', loanPosition?.posObject.inner],
             enabled: !!loanPosition,
-            refetchOnWindowFocus: false,
+
         }
     });
 
@@ -231,7 +230,7 @@ const CustomTableRow = (props: CustomTableRowProps) => {
         options: {
             queryKey: ['hyperion', 'getPoolInfo', positionInfo?.tokenA.inner, positionInfo?.tokenB.inner, positionInfo?.feeTier],
             enabled: !!positionInfo,
-            refetchOnWindowFocus: false,
+
         }
     });
 
@@ -241,7 +240,7 @@ const CustomTableRow = (props: CustomTableRowProps) => {
         }, options: {
             queryKey: ['hyperion', 'getPoolById', poolInfo?.poolId],
             enabled: !!poolInfo,
-            refetchOnWindowFocus: false,
+
         }
     });
     const item: Item | null = useMemo(() => {

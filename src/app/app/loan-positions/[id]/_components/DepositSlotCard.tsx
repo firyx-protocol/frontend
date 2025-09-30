@@ -52,7 +52,6 @@ export const DepositSlotCard = ({
             queryKey: ['loan-position', 'deposit-slot', id],
             enabled: !!id,
             staleTime: 5 * 60 * 1000, // 5 minutes
-            refetchOnWindowFocus: false,
         }
     });
     const { data = {
@@ -69,7 +68,6 @@ export const DepositSlotCard = ({
         },
         enabled: !!calculatePendingYield && !!id && !!loanPos,
         staleTime: 5 * 60 * 1000, // 5 minutes
-        refetchOnWindowFocus: true,
     });
 
     const { data: positionInfo, isLoading: isLoadingPosInfo } = useHyperionGetPositionResource({
@@ -79,7 +77,6 @@ export const DepositSlotCard = ({
         options: {
             queryKey: ['hyperion', 'getPositionResource', loanPos?.posObject.inner],
             enabled: !!loanPos,
-            refetchOnWindowFocus: false,
         }
     });
 
@@ -92,7 +89,6 @@ export const DepositSlotCard = ({
         options: {
             queryKey: ['hyperion', 'getPoolInfo', positionInfo?.tokenA.inner, positionInfo?.tokenB.inner, positionInfo?.feeTier],
             enabled: !!positionInfo,
-            refetchOnWindowFocus: false,
         }
     });
 
@@ -102,7 +98,6 @@ export const DepositSlotCard = ({
         }, options: {
             queryKey: ['hyperion', 'getPoolById', poolInfo?.poolId],
             enabled: !!poolInfo,
-            refetchOnWindowFocus: false,
         }
     });
 
@@ -129,6 +124,7 @@ export const DepositSlotCard = ({
             <HStack bg={"bg.panel"} shadow={"sm"} rounded={"2xl"} w={"full"} h={"full"} p={"2"}>
                 <Center
                     h={"full"}
+                    flex={1}
                     p={"2"}
                     aspectRatio={"1/1"}
                     rounded={"2xl"}
@@ -145,7 +141,7 @@ export const DepositSlotCard = ({
                         {numeral(BigNumber(depositSlot.share).multipliedBy(100).dividedBy(loanPos.liquidity)).format("0,0.[00]")}%
                     </Text>
                 </Center>
-                <VStack align={"start"} w={"full"}>
+                <VStack align={"start"} w={"full"} flex={5}>
                     <HStack w={"full"} justify={"space-between"}>
                         <Link
                             href={`${APTOS_EXPLORER_URL}/account/${id}`}

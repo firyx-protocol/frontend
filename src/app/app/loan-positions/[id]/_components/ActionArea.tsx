@@ -39,7 +39,6 @@ export const ActionArea = (props: Props) => {
         options: {
             queryKey: ["loan-position", id],
             enabled: !!id,
-            refetchOnWindowFocus: false,
         }
     });
 
@@ -49,9 +48,7 @@ export const ActionArea = (props: Props) => {
         },
         options: {
             queryKey: ['hyperion', 'getPositionResource', loanPosition?.posObject.inner],
-            enabled: !!loanPosition,
-            refetchOnWindowFocus: false,
-            staleTime: 1000 * 60 * 5, // 5 minutes
+            enabled: !!loanPosition, staleTime: 1000 * 60 * 5, // 5 minutes
         }
     });
 
@@ -64,7 +61,6 @@ export const ActionArea = (props: Props) => {
         options: {
             queryKey: ['hyperion', 'getPoolInfo', positionInfo?.tokenA.inner, positionInfo?.tokenB.inner, positionInfo?.feeTier],
             enabled: !!positionInfo,
-            refetchOnWindowFocus: false,
         }
     });
 
@@ -73,9 +69,7 @@ export const ActionArea = (props: Props) => {
             id: poolInfo?.poolId || "",
         }, options: {
             queryKey: ['hyperion', 'getPoolById', poolInfo?.poolId],
-            enabled: !!poolInfo,
-            refetchOnWindowFocus: false,
-            staleTime: 1000 * 60 * 5, // 5 minutes
+            enabled: !!poolInfo, staleTime: 1000 * 60 * 5, // 5 minutes
         }
     });
 
@@ -177,7 +171,6 @@ export const DepositWidget = ({
         options: {
             queryKey: ['get-fungible-token-balances', account?.address.toString(), poolInfo?.token1, poolInfo?.token2],
             enabled: !!account?.address && !!poolInfo,
-            refetchOnWindowFocus: false,
         }
     });
 
@@ -210,7 +203,6 @@ export const DepositWidget = ({
         },
         enabled: !!pool && !!rawAmountA,
         staleTime: Infinity,
-        refetchOnWindowFocus: false,
     });
 
     const tokenAWithBalance: TokenMetadata & { balance: string } = useMemo(() => ({
@@ -320,7 +312,7 @@ export const BorrowShareWidget = (props: BorrowShareProps) => {
                 setDurationIdx(0);
 
                 queryClient.invalidateQueries();
-                
+
                 toaster.success({
                     title: "Success",
                     description: "Liquidity borrowed successfully",
@@ -348,7 +340,6 @@ export const BorrowShareWidget = (props: BorrowShareProps) => {
             return reserve;
         },
         enabled: !!share,
-        refetchOnWindowFocus: false,
     });
 
     const { data: tokenFeeInfo } = useGetFungibleToken({
