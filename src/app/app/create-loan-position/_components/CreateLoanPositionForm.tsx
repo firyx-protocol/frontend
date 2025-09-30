@@ -606,7 +606,7 @@ export const CreateLoanPositionForm = (props: Props) => {
                 queryClient.invalidateQueries();
                 toaster.success({
                     title: "Loan position created successfully!",
-                    description: `Position address ${data.positionAddress}`,
+                    description: `Address ${data.positionAddress}`,
                 });
             },
             onError: (error) => {
