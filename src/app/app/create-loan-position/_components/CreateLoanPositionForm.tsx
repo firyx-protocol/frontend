@@ -42,6 +42,7 @@ import { NumberInputField, NumberInputRoot } from "@/components/ui/number-input"
 import { PairTokensIcon } from "@/components/utils/pair-tokens-icon";
 import numeral from "numeral";
 import { NETWORK } from "@/constants";
+import { useQueryClient } from "@tanstack/react-query";
 
 const RISK_FACTOR_GRAPHS = [
     '/assets/ConservativeGraph.svg',
@@ -586,6 +587,7 @@ const steps = [
 ];
 
 export const CreateLoanPositionForm = (props: Props) => {
+    const queryClient = useQueryClient();
     const [step, setStep] = useState(0);
     const form = useForm<FormInput>({
         defaultValues: {
@@ -601,6 +603,7 @@ export const CreateLoanPositionForm = (props: Props) => {
     const { mutateAsync: createLoanPosition } = useCreateLoanPosition({
         options: {
             onSuccess: (data) => {
+                queryClient.invalidateQueries();
                 toaster.success({
                     title: "Loan position created successfully!",
                     description: `Position address ${data.positionAddress}`,
