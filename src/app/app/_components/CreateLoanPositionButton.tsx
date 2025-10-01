@@ -1,6 +1,5 @@
 "use client";
 
-import { toaster } from "@/components/ui/toaster";
 import { Button, ButtonProps, Icon } from "@chakra-ui/react";
 import { } from "next/font/google";
 import { useRouter } from "next/navigation";
@@ -16,13 +15,7 @@ export const CreateLoanPositionButton = (props: Props) => {
     }
 
     return (
-        <Button onClick={()=>{
-            toaster.success({
-                title: "Feature coming soon!",
-                description: "The create loan position feature is coming soon. Stay tuned!",
-                duration: Infinity
-            })
-        }} {...props}>
+        <Button onClick={handleClick} {...props}>
             Create Loan Position
             <Icon as={TiPlus} />
         </Button>
