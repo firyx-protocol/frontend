@@ -198,7 +198,7 @@ interface CustomTableRowProps extends TableRowProps {
 const CustomTableRow = (props: CustomTableRowProps) => {
     const { loanPositionId, ...rest } = props;
     const router = useRouter();
-    
+
     const { data: loanPosition, isLoading: isLoadingLP } = useGetLoanPositionById({
         payload: {
             id: loanPositionId
@@ -259,7 +259,7 @@ const CustomTableRow = (props: CustomTableRowProps) => {
         return {
             address: loanPositionId,
             poolAddress: poolInfo.poolId,
-            riskFactor: loanPosition.parameters.riskFactor,
+            riskFactor: RISK_FACTOR_BFS_VECTOR[loanPosition.parameters.riskFactor] / BPS,
             poolApr: Number(pool?.feeAPR).toFixed(2) || "-",
             borrowedApr: `${Number((borrowedApr * 100)).toFixed(2)}%`,
             dailyVolumeUSD: pool?.dailyVolumeUSD,
