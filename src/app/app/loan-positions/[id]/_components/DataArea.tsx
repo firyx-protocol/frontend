@@ -1,7 +1,7 @@
 "use client";
 
 import { PairTokensIcon } from "@/components/utils/pair-tokens-icon";
-import { APTOS_EXPLORER_URL, BASE_RATE_BPS, BPS } from "@/constants";
+import { APTOS_EXPLORER_URL, BASE_RATE_BPS, BPS, RISK_FACTOR_BFS_VECTOR } from "@/constants";
 import { useGetLoanPositionById } from "@/hooks/useGetLoanPositionResource";
 import { useHyperionGetPoolById } from "@/hooks/useHyperionGetPoolById";
 import { useHyperionGetPoolInfo } from "@/hooks/useHyperionGetPoolInfo";
@@ -79,7 +79,7 @@ export const DataArea = (props: Props) => {
         const kinkUtilization = Number(loanPosition.parameters.kinkUtilization || "0");
         const slopeBeforeKink = Number(loanPosition.parameters.slopeBeforeKink || "0") / BPS;
         const slopeAfterKink = Number(loanPosition.parameters.slopeAfterKink || "0") / BPS;
-        const riskFactor = loanPosition.parameters.riskFactor || 0;
+        const riskFactor = RISK_FACTOR_BFS_VECTOR[loanPosition.parameters.riskFactor] / BPS;
         // Formula: baseRate + (slopeBeforeKink * (utilization / kinkUtilization)) + (slopeAfterKink * ((utilization - kinkUtilization) / (1 - kinkUtilization)) ^ riskFactor)
         const borrowedApr = utilization < kinkUtilization
             ? (slopeBeforeKink * utilization / (kinkUtilization || 1))
@@ -238,7 +238,7 @@ const DetailsPanel = (props: DetailsPanelProps) => {
         },
         {
             label: "Risk Factor",
-            value: loanPos.parameters.riskFactor
+            value: RISK_FACTOR_BFS_VECTOR[loanPos.parameters.riskFactor] / BPS,
         }
     ];
 
