@@ -60,6 +60,12 @@ export default async function middleware(request: NextRequest) {
         return; // Allow other routes on root domain (landing pages)
     }
 
+    if (subdomain === "whitepaper") {
+        const url = request.nextUrl.clone();
+        url.pathname = `/whitepaper.pdf`;
+        return NextResponse.rewrite(url);
+    }
+
     // Handle 'app' subdomain
     if (subdomain === "app") {
         // Rewrite to /app path instead of redirecting
