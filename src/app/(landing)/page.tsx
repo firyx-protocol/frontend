@@ -3,7 +3,7 @@ import { HeroSection } from "./_sections/Hero";
 
 export default function Home() {
   return (
-    <VStack height={"full"} width={"full"} justifyContent={"center"} alignItems={"center"}>
+    <VStack height={"full"} width={"full"} justifyContent={"center"} alignItems={"top"}>
       <HeroSection />
     </VStack>
   );

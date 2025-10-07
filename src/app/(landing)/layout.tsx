@@ -15,7 +15,7 @@ export default async function Layout({
     return (
         <VStack height={"100vh"} width={"100vw"} gap={"6"} p={"4"}>
             <Header />
-            <Container maxW={"8xl"} height={"full"} width={"full"}>
+            <Container maxW={"6xl"} height={"full"} width={"full"}>
                 {children}
             </Container>
         </VStack>
